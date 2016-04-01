@@ -65,16 +65,15 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestExecutionService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OutOfProcessTestExecution.Contracts\OutOfProcessTestExecution.Contracts.csproj">
+    <ProjectReference Include="..\OutOfProcessTestExecution.Contracts\XUnitRemote.csproj">
       <Project>{21248CF4-3629-4CFA-8632-9E4468A0526E}</Project>
-      <Name>OutOfProcessTestExecution.Contracts</Name>
+      <Name>XUnitRemote</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("XUnitRemote")]
+[assembly: AssemblyTitle("XUnitRemote.Solidworks")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Weingartner")]
-[assembly: AssemblyProduct("XUnitRemote")]
-[assembly: AssemblyCopyright("Copyright © Weingartner Machinenbau Gmbh 2016")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("XUnitRemote.Solidworks")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("21248cf4-3629-4cfa-8632-9e4468a0526e")]
+[assembly: Guid("5db2dd8c-cc1f-4f92-93cd-e844f5c051f5")]
 
 // Version information for an assembly consists of the following four values:
 //

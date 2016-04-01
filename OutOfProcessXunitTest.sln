@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutOfProcessXunitTest", "OutOfProcessXunitTest\OutOfProcessXunitTest.csproj", "{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test", "OutOfProcessXunitTest\XUnitRemote.Test.csproj", "{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}"
 	ProjectSection(ProjectDependencies) = postProject
 		{72AC218A-6265-4628-9D6F-9AB20D61DD00} = {72AC218A-6265-4628-9D6F-9AB20D61DD00}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleProcess", "SampleProcess\SampleProcess.csproj", "{72AC218A-6265-4628-9D6F-9AB20D61DD00}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test.SampleProcess", "SampleProcess\XUnitRemote.Test.SampleProcess.csproj", "{72AC218A-6265-4628-9D6F-9AB20D61DD00}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutOfProcessTestExecution.Contracts", "OutOfProcessTestExecution.Contracts\OutOfProcessTestExecution.Contracts.csproj", "{21248CF4-3629-4CFA-8632-9E4468A0526E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote", "OutOfProcessTestExecution.Contracts\XUnitRemote.csproj", "{21248CF4-3629-4CFA-8632-9E4468A0526E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

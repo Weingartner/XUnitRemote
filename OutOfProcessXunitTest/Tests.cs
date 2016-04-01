@@ -7,9 +7,9 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using OutOfProcessXunitTest.Xunit;
 using Xunit;
 using Xunit.Abstractions;
+using XUnitRemote.Test.Xunit;
 
 namespace OutOfProcessXunitTest
 {
@@ -22,7 +22,7 @@ namespace OutOfProcessXunitTest
             _Output = output;
         }
 
-        [OutOfProcessFact]
+        [SampleProcessFact]
         public void OutOfProcess()
         {
             _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);

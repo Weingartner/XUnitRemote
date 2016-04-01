@@ -8,14 +8,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OutOfProcessTestExecution.Contracts;
 using Xunit;
 using Xunit.Runners;
+using XUnitRemote;
+using XUnitRemote.Remoting;
+using XUnitRemote.Remoting.Service;
 
 namespace SampleProcess
 {
     public static class Program
     {
+        public const string Id = @"sampleprocessxx11";
+
         private static void Main()
         {
             try
@@ -30,16 +34,7 @@ namespace SampleProcess
 
         private static async Task Run()
         {
-            Debugger.Launch();
-            using (var host = new ServiceHost(typeof (TestExecutionService)))
-            {
-                var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-                var address = new Uri("net.pipe://localhost/weingartner/TestExecutionService");
-                host.AddServiceEndpoint(typeof(ITestExecutionService), binding, address);
-                host.Open();
-                await Task.Delay(TimeSpan.FromSeconds(60));
-            }
-
+            await XUnitService.Start(Id);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace OutOfProcessTestExecution.Contracts
+namespace XUnitRemote
 {
     [Serializable]
     public class TestExecutionException : Exception
