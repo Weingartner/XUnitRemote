@@ -5,8 +5,7 @@ namespace XUnitRemote.Remoting
     [DataContract]
     public class TestExecutionFault
     {
-        [DataMember]
-        public string Message { get; }
+        [DataMember] public string Message { get; }
 
         public TestExecutionFault(string message)
         {

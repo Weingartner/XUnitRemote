@@ -7,12 +7,14 @@ namespace XUnitRemote
 {
     public class OutOfProcessTestCase : XunitTestCase
     {
+        private readonly string _Id;
+        private readonly string _ExePath;
 
         public OutOfProcessTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod, string id, string exePath)
             : base(diagnosticMessageSink, defaultMethodDisplay, testMethod)
         {
-            Id = id;
-            ExePath = exePath;
+            _Id = id;
+            _ExePath = exePath;
         }
 
         public override Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink,
@@ -21,10 +23,7 @@ namespace XUnitRemote
             ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource)
         {
-            return new OutOfProcessTestCaseRunner(this, DisplayName, SkipReason, constructorArguments, TestMethodArguments, messageBus, aggregator, cancellationTokenSource, Id, ExePath).RunAsync();
+            return new OutOfProcessTestCaseRunner(this, DisplayName, SkipReason, constructorArguments, TestMethodArguments, messageBus, aggregator, cancellationTokenSource, _Id, _ExePath).RunAsync();
         }
-
-        public string Id { get; }
-        public string ExePath { get; }
     }
 }

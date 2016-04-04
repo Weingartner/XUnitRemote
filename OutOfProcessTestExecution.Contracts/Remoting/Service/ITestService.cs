@@ -7,7 +7,6 @@ namespace XUnitRemote.Remoting.Service
     [ServiceKnownType(typeof(TestPassed))]
     [ServiceKnownType(typeof(TestFailed))]
     [ServiceKnownType(typeof(TestSkipped))]
-
     public interface ITestService
     {
         [OperationContract]

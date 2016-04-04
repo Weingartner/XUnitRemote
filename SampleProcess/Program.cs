@@ -22,19 +22,7 @@ namespace SampleProcess
 
         private static void Main()
         {
-            try
-            {
-                Run().Wait();
-            }
-            catch (AggregateException ex)
-            {
-                throw ex.InnerException;
-            }
-        }
-
-        private static async Task Run()
-        {
-            await XUnitService.Start(Id);
+            XUnitService.Start(Id).Wait();
         }
     }
 }

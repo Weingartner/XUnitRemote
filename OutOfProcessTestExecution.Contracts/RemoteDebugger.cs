@@ -5,7 +5,7 @@ using EnvDTE;
 
 namespace XUnitRemote
 {
-    public class RemoteDebugger
+    public static class RemoteDebugger
     {
 
         public static void Launch(int pid)
@@ -13,12 +13,9 @@ namespace XUnitRemote
             var dte = (DTE)Marshal.GetActiveObject("VisualStudio.DTE.14.0");
             MessageFilter.Register();
 
-            IEnumerable<Process> processes = dte.Debugger.LocalProcesses.OfType<Process>();
+            var processes = dte.Debugger.LocalProcesses.OfType<Process>();
             var process = processes.SingleOrDefault(x => x.ProcessID == pid);
-            if (process != null)
-            {
-                process.Attach();
-            }
+            process?.Attach();
         }
     }
 }

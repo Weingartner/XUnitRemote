@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using XUnitRemote.Remoting.Service;
 
@@ -10,7 +8,7 @@ namespace XUnitRemote
 {
     public static class XUnitService
     {
-        public static async Task Start(string id,TimeSpan? timeout = null)
+        public static async Task Start(string id, TimeSpan? timeout = null)
         {
             await Task.Run(async () =>
             {
@@ -20,19 +18,16 @@ namespace XUnitRemote
                     var address = Address(id);
                     host.AddServiceEndpoint(typeof (ITestService), binding, address);
                     host.Open();
-                    if (timeout == null)
-                        await Task.Delay(-1);
-                    else
-                        await Task.Delay(timeout??TimeSpan.MaxValue);
+                    await Task.Delay(timeout ?? Timeout.InfiniteTimeSpan);
                 }
             });
         }
 
-        public static string _BaseUrl = "net.pipe://localhost/weingartner/XUnitRemoteTestService/";
+        public static readonly Uri BaseUrl = new Uri("net.pipe://localhost/weingartner/XUnitRemoteTestService/");
 
         public static Uri Address(string id)
         {
-            return new Uri(_BaseUrl + id);
+            return new Uri(BaseUrl, id);
         }
     }
 }

@@ -7,17 +7,17 @@ namespace XUnitRemote
 {
     public abstract class OutOfProcessFactDiscovererBase : IXunitTestCaseDiscoverer
     {
-        private IMessageSink _DiagnosticMessageSink;
-        private FactDiscoverer _FactDiscoverer;
+        private readonly IMessageSink _DiagnosticMessageSink;
+        private readonly FactDiscoverer _FactDiscoverer;
 
-        public OutOfProcessFactDiscovererBase(IMessageSink diagnosticMessageSink)
+        protected OutOfProcessFactDiscovererBase(IMessageSink diagnosticMessageSink)
         {
             _DiagnosticMessageSink = diagnosticMessageSink;
             _FactDiscoverer = new FactDiscoverer(diagnosticMessageSink);
         }
 
-        public abstract string Id { get; }
-        public abstract string ExePath { get; }
+        protected abstract string Id { get; }
+        protected abstract string ExePath { get; }
 
         public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
         {
