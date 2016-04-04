@@ -87,9 +87,7 @@
     <Compile Include="TestExecutionException.cs" />
     <Compile Include="XUnitService.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ClientServer\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
-using XUnitRemote.Test.Xunit;
+using XUnitRemote.Test;
 
 namespace OutOfProcessXunitTest
 {
