@@ -5,12 +5,12 @@ using Xunit.Sdk;
 
 namespace XUnitRemote
 {
-    public class OutOfProcessTestCase : XunitTestCase
+    public class XUnitRemoteTestCase : XunitTestCase
     {
         private readonly string _Id;
         private readonly string _ExePath;
 
-        public OutOfProcessTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod, string id, string exePath)
+        public XUnitRemoteTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod, string id, string exePath)
             : base(diagnosticMessageSink, defaultMethodDisplay, testMethod)
         {
             _Id = id;

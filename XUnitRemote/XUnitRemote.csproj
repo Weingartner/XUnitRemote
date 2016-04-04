@@ -72,8 +72,8 @@
   <ItemGroup>
     <Compile Include="IOleMessageFilter.cs" />
     <Compile Include="MessageFilter.cs" />
-    <Compile Include="OutOfProcessFactDiscovererBase.cs" />
-    <Compile Include="OutOfProcessTestCase.cs" />
+    <Compile Include="XUnitRemoteFactDiscovererBase.cs" />
+    <Compile Include="XUnitRemoteTestCase.cs" />
     <Compile Include="OutOfProcessTestCaseRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteDebugger.cs" />
