@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Security;
-using System.Security.Permissions;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Xunit;
 using Xunit.Abstractions;
-using XUnitRemote.Test;
 
-namespace OutOfProcessXunitTest
+namespace XUnitRemote.Test
 {
     public class Tests
     {
