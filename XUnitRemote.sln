@@ -3,14 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test", "OutOfProcessXunitTest\XUnitRemote.Test.csproj", "{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}"
-	ProjectSection(ProjectDependencies) = postProject
-		{72AC218A-6265-4628-9D6F-9AB20D61DD00} = {72AC218A-6265-4628-9D6F-9AB20D61DD00}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote", "XUnitRemote\XUnitRemote.csproj", "{21248CF4-3629-4CFA-8632-9E4468A0526E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test.SampleProcess", "SampleProcess\XUnitRemote.Test.SampleProcess.csproj", "{72AC218A-6265-4628-9D6F-9AB20D61DD00}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test", "XUnitRemote.Test\XUnitRemote.Test.csproj", "{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote", "OutOfProcessTestExecution.Contracts\XUnitRemote.csproj", "{21248CF4-3629-4CFA-8632-9E4468A0526E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitRemote.Test.SampleProcess", "XUnitRemote.Test.SampleProcess\XUnitRemote.Test.SampleProcess.csproj", "{72AC218A-6265-4628-9D6F-9AB20D61DD00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,6 +15,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5190BA4C-3DF2-4D67-9625-FCA981CD0B02}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -26,10 +27,6 @@ Global
 		{72AC218A-6265-4628-9D6F-9AB20D61DD00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72AC218A-6265-4628-9D6F-9AB20D61DD00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72AC218A-6265-4628-9D6F-9AB20D61DD00}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21248CF4-3629-4CFA-8632-9E4468A0526E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -97,13 +97,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OutOfProcessTestExecution.Contracts\XUnitRemote.csproj">
-      <Project>{21248cf4-3629-4cfa-8632-9e4468a0526e}</Project>
-      <Name>XUnitRemote</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SampleProcess\XUnitRemote.Test.SampleProcess.csproj">
+    <ProjectReference Include="..\XUnitRemote.Test.SampleProcess\XUnitRemote.Test.SampleProcess.csproj">
       <Project>{72ac218a-6265-4628-9d6f-9ab20d61dd00}</Project>
       <Name>XUnitRemote.Test.SampleProcess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\XUnitRemote\XUnitRemote.csproj">
+      <Project>{21248cf4-3629-4cfa-8632-9e4468a0526e}</Project>
+      <Name>XUnitRemote</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
