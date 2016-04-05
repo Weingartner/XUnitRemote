@@ -1,15 +1,34 @@
+using System;
+using System.IO;
+using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
+using System.Windows.Forms;
 using Xunit.Runners;
 using XUnitRemote.Remoting.Result;
 
 namespace XUnitRemote.Remoting.Service
 {
+    [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class TestService : ITestService
     {
+        public TestService()
+        {
+            Console.WriteLine("woo");
+        }
+
+        public string GetCurrentFolder()
+        {
+            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
+            UriBuilder uri = new UriBuilder(codeBase);
+            string path = Uri.UnescapeDataString(uri.Path);
+            return Path.GetDirectoryName(path);
+        }
+
         public ITestResult RunTest(string assemblyPath, string typeName, string methodName)
         {
-            using (var runner = AssemblyRunner.WithAppDomain(assemblyPath))
+
+            using (var runner = AssemblyRunner.WithoutAppDomain(assemblyPath))
             using (var finished = new ManualResetEvent(false))
             {
                 runner.OnExecutionComplete = info => finished.Set();

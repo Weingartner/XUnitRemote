@@ -30,7 +30,7 @@ namespace XUnitRemote.Test
     public class SampleProcessFactDiscoverer : XUnitRemoteFactDiscovererBase
     {
         protected override string Id { get; } = SampleProcess.Program.Id;
-        protected override string ExePath { get; } = @"..\..\..\SampleProcess\bin\Debug\SampleProcess.exe";
+        protected override string ExePath { get; } = @"..\..\..\XUnitRemote.Test.SampleProcess\bin\Debug\XUnitRemote.Test.SampleProcess.exe";
 
         public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink) : base(diagnosticMessageSink)
         {

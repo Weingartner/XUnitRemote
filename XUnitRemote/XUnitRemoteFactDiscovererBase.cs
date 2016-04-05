@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -30,7 +32,7 @@ namespace XUnitRemote
 
         public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo factAttribute)
         {
-            if (Process.GetCurrentProcess().ProcessName != "SampleProcess")
+            if (!Process.GetCurrentProcess().ProcessName.Equals(Path.GetFileNameWithoutExtension(ExePath), StringComparison.OrdinalIgnoreCase))
             {
                 var id = Id;
                 var exePath = ExePath;

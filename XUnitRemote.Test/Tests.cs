@@ -17,7 +17,7 @@ namespace XUnitRemote.Test
         public void OutOfProcess()
         {
             _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
-            Assert.Equal(5, 3);
+            Assert.Equal(5, 4);
         }
 
         [Fact]

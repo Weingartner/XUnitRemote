@@ -23,7 +23,7 @@ namespace XUnitRemote
             ExceptionAggregator aggregator,
             CancellationTokenSource cancellationTokenSource)
         {
-            return new OutOfProcessTestCaseRunner(this, DisplayName, SkipReason, constructorArguments, TestMethodArguments, messageBus, aggregator, cancellationTokenSource, _Id, _ExePath).RunAsync();
+            return new XUnitRemoteTestCaseRunner(this, DisplayName, SkipReason, constructorArguments, TestMethodArguments, messageBus, aggregator, cancellationTokenSource, _Id, _ExePath).RunAsync();
         }
     }
 }

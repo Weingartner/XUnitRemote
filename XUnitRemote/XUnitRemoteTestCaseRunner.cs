@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,12 +18,12 @@ using TestSkipped = XUnitRemote.Remoting.Result.TestSkipped;
 
 namespace XUnitRemote
 {
-    public class OutOfProcessTestCaseRunner : XunitTestCaseRunner
+    public class XUnitRemoteTestCaseRunner : XunitTestCaseRunner
     {
         private readonly string _ExecutablePath;
         private readonly string _Id;
 
-        public OutOfProcessTestCaseRunner(IXunitTestCase testCase, string displayName, string skipReason, object[] constructorArguments, object[] testMethodArguments,
+        public XUnitRemoteTestCaseRunner(IXunitTestCase testCase, string displayName, string skipReason, object[] constructorArguments, object[] testMethodArguments,
             IMessageBus messageBus, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource, string id, string exePath)
             : base(testCase, displayName, skipReason, constructorArguments, testMethodArguments, messageBus, aggregator, cancellationTokenSource)
         {
@@ -34,18 +35,20 @@ namespace XUnitRemote
         {
             try
             {
-                return await Task.Run(() =>
-                {
-                    var result = Policy
-                        .Handle<EndpointNotFoundException>()
-                        .WaitAndRetry(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 50))
-                        .ExecuteAndCapture(() => RunTest(_ExecutablePath, _Id));
-                    if (result.Outcome != OutcomeType.Successful)
+                using (var process = GetOrStartProcess(_ExecutablePath))
+                using (RemoteDebugger.CascadeDebugging(process.Id))
+                    return await Task.Run(() =>
                     {
-                        throw result.FinalException;
-                    }
-                    return result.Result;
-                });
+                        var result = Policy
+                            .Handle<Exception>(e => e is DebuggerException || e is EndpointNotFoundException)
+                            .WaitAndRetry(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 500))
+                            .ExecuteAndCapture(() => RunTest(_ExecutablePath, _Id));
+                        if (result.Outcome != OutcomeType.Successful)
+                        {
+                            throw result.FinalException;
+                        }
+                        return result.Result;
+                    });
             }
             catch (Exception e)
             {
@@ -57,35 +60,37 @@ namespace XUnitRemote
 
         private RunSummary RunTest(string processPath, string id)
         {
-            using (var process = GetOrStartProcess(processPath))
+            using (var channelFactory = CreateTestServiceChannelFactory(id))
             {
-                RemoteDebugger.Launch(process.Id);
-                var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-                var address = XUnitService.Address(id);
-                using (var channelFactory = new ChannelFactory<ITestService>(binding, address.ToString()))
+                Func<ITestService, RunSummary> action = service =>
                 {
-                    Func<ITestService, RunSummary> action = service =>
+                    try
                     {
-                        try
-                        {
-                            var testResult = service.RunTest(
-                                TestCase.Method.Type.Assembly.AssemblyPath,
-                                TestCase.Method.Type.Name,
-                                TestCase.Method.Name);
-                            var test = new XunitTest(TestCase, DisplayName);
-                            var message = GetMessageFromTestResult(test, testResult);
-                            MessageBus.QueueMessage(message);
-                            return GetRunSummary(testResult);
-                        }
-                        catch (FaultException<TestExecutionFault> fault)
-                        {
-                            throw new TestExecutionException(fault.Detail.Message, fault);
-                        }
-                    };
+                        var testResult = service.RunTest(
+                            TestCase.Method.Type.Assembly.AssemblyPath,
+                            TestCase.Method.Type.Name,
+                            TestCase.Method.Name);
+                        var test = new XunitTest(TestCase, DisplayName);
+                        var message = GetMessageFromTestResult(test, testResult);
+                        MessageBus.QueueMessage(message);
+                        return GetRunSummary(testResult);
+                    }
+                    catch (FaultException<TestExecutionFault> fault)
+                    {
+                        throw new TestExecutionException(fault.Detail.Message, fault);
+                    }
+                };
 
-                    return ExecuteWithChannel(channelFactory, action);
-                }
+                return ExecuteWithChannel(channelFactory, action);
             }
+        }
+
+        private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id)
+        {
+            var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+            var address = XUnitService.Address(id);
+            var channelFactory = new ChannelFactory<ITestService>(binding, address.ToString());
+            return channelFactory;
         }
 
         private static Process GetOrStartProcess(string processPath)
