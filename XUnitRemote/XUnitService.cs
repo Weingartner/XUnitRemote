@@ -1,36 +1,62 @@
-﻿using System;
-using System.Reactive;
-using System.Reactive.Linq;
+﻿// Decompiled with JetBrains decompiler
+// Type: XUnitRemote.XUnitService
+// Assembly: XUnitRemote, Version=1.0.0.7, Culture=neutral, PublicKeyToken=null
+// MVID: CAA63DC1-C4FB-455B-A4F1-1665E004B540
+// Assembly location: C:\Users\phelan\workspace\WeinCadSW\swcsharpmf\XUnit.Solidworks.Addin\bin\Debug\XUnitRemote.dll
+
+using System;
+using System.Diagnostics;
+using System.Linq;
 using System.ServiceModel;
+using System.ServiceModel.Description;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using SolidworksAddinFramework;
+using XUnitRemote.Remoting.Result;
 using XUnitRemote.Remoting.Service;
+using Binding = System.ServiceModel.Channels.Binding;
 
 namespace XUnitRemote
 {
     public static class XUnitService
     {
-        public static async Task Start(string id, TimeSpan? timeout = null)
-        {
+        public static readonly Uri BaseUrl = new Uri("net.pipe://localhost/weingartner/XUnitRemoteTestService/");
 
-            using (var host = new ServiceHost(typeof (TestService)))
+        public static async Task Start(string id, Func<Func<ITestResult>,ITestResult> marshaller=null, TimeSpan? timeout = null)
+        {
+            // Use a default dispatcher if none is provided
+            marshaller = marshaller ?? (f => f());
+
+            using (var host = new ServiceHost(new TestDispatcher(marshaller), Array.Empty<Uri>()))
             {
-                var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-                var address = Address(id);
-                host.AddServiceEndpoint(typeof (ITestService), binding, address);
+                NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+                Uri address = Address(id);
+                host.AddServiceEndpoint(typeof (ITestService), (Binding) binding, address);
+
                 host.Open();
                 await Task.Delay(timeout ?? Timeout.InfiniteTimeSpan);
+                binding = (NetNamedPipeBinding) null;
+                address = (Uri) null;
             }
-
         }
-
-        public static readonly Uri BaseUrl = new Uri("net.pipe://localhost/weingartner/XUnitRemoteTestService/");
 
         public static Uri Address(string id)
         {
             return new Uri(BaseUrl, id);
         }
+    }
+
+    public class TestDispatcher : ITestService
+    {
+        private readonly Func<Func<ITestResult>,ITestResult> _Marshaller;
+        private readonly ITestService _Service = new TestService();
+
+        public TestDispatcher(Func<Func<ITestResult>,ITestResult> marshaller)
+        {
+            _Marshaller = marshaller;
+        }
+
+        ITestResult ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
+            _Marshaller(() => _Service.RunTest(assemblyPath, typeName, methodName));
     }
 }
