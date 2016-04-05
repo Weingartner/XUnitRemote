@@ -5,6 +5,7 @@ using System.Reactive.Disposables;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Debugger = System.Diagnostics.Debugger;
+using Polly;
 
 namespace XUnitRemote
 {
@@ -15,6 +16,24 @@ namespace XUnitRemote
             return IsDebuggerAttached() ? Attach(pid) : Disposable.Empty;
         }
 
+        public static TR Retry<TR>(Func<TR> fn)
+        {
+            var result = Policy.Handle<Exception>()
+                .WaitAndRetry(50, i => TimeSpan.FromMilliseconds(10 * i))
+                .ExecuteAndCapture(fn);
+
+            if (result.Outcome == OutcomeType.Successful)
+                return result.Result;
+
+            throw result.FinalException;
+
+        }
+
+        public static void Retry(Action fn)
+        {
+            Retry(()=>{ fn(); return 0; });
+        }
+
 
         public static IDisposable Attach(int pid)
         {
@@ -22,17 +41,17 @@ namespace XUnitRemote
             {
                 MessageFilter.Register();
 
-                var process = Process(pid);
-
+                var process = Retry(() => Process(pid));
                 if(process==null)
                     throw new DebuggerException($"Pid {pid} not found. Can't start debugger");
-
-                process.Attach();
+                        process.Attach();
+                Retry(process.Attach);
 
                 if(!IsDebuggerAttached(process.ProcessID))
                     throw new DebuggerException();
 
                 return Disposable.Create(() => Detach(process));
+
             }
             catch (COMException e)
             {
