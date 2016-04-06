@@ -34,7 +34,7 @@ namespace XUnitRemote
         /// must be serializable</param>
         /// <param name="timeout">How long the service runs</param>
         /// <returns></returns>
-        public static async Task Start(string id, Func<Func<ITestResult>,ITestResult> marshaller=null, Dictionary<string, object> data=null, TimeSpan? timeout = null)
+        public static async Task Start(string id, Func<Func<ITestResult[]>,ITestResult[]> marshaller=null, Dictionary<string, object> data=null, TimeSpan? timeout = null)
         {
             // Use a default dispatcher if none is provided
             marshaller = marshaller ?? (f => f());
@@ -64,16 +64,16 @@ namespace XUnitRemote
     {
         public Dictionary<string, object> Data { get; }
 
-        private readonly Func<Func<ITestResult>,ITestResult> _Marshaller;
+        private readonly Func<Func<ITestResult[]>,ITestResult[]> _Marshaller;
         private readonly ITestService _Service = new TestService();
 
-        public TestDispatcher(Func<Func<ITestResult>, ITestResult> marshaller, Dictionary<string, object> data)
+        public TestDispatcher(Func<Func<ITestResult[]>, ITestResult[]> marshaller, Dictionary<string, object> data)
         {
             Data = data;
             _Marshaller = marshaller;
         }
 
-        ITestResult ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
+        ITestResult [] ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
             _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName, Data));
 
         private static void Callback(string assemblyPath, string typeName, string methodName)
@@ -85,7 +85,7 @@ namespace XUnitRemote
     }
 
     [Serializable]
-    public class IsolatedTestRunner : IsolateBase<ITestResult>
+    public class IsolatedTestRunner : IsolateBase<ITestResult[]>
     {
         private readonly string _AssemblyPath;
         private readonly string _TypeName;
@@ -100,13 +100,13 @@ namespace XUnitRemote
             _Data = data;
         }
 
-        protected override ITestResult RunImpl()
+        protected override ITestResult [] RunImpl()
         {
             XUnitService.Data = _Data;
             return new TestService().RunTest(_AssemblyPath, _TypeName, _MethodName);
         }
 
-        public static ITestResult Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data)
+        public static ITestResult [] Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data)
         {
             var i = new IsolatedTestRunner(assemblyPath, typeName, methodName, data);
             return i.Run();

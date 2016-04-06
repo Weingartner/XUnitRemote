@@ -1,4 +1,5 @@
 ﻿using System;
+using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using FactAttribute = Xunit.FactAttribute;
@@ -22,6 +23,15 @@ namespace XUnitRemote.Test
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessFactDiscoverer", "XUnitRemote.Test")]
     public class SampleProcessFactAttribute : FactAttribute { }
 
+    [AttributeUsage(AttributeTargets.Method)]
+    [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessTheoryDiscoverer", "XUnitRemote.Test")]
+    public class SampleProcessTheoryAttribute : TheoryAttribute { }
+
+    internal class Common
+    {
+        public static string SampleProcessPath = @"..\..\..\XUnitRemote.Test.SampleProcess\bin\Debug\XUnitRemote.Test.SampleProcess.exe";
+    }
+
 
     /// <summary>
     /// This is the xunit fact discoverer that xunit uses to replace the standard xunit runner
@@ -30,9 +40,19 @@ namespace XUnitRemote.Test
     public class SampleProcessFactDiscoverer : XUnitRemoteFactDiscovererBase
     {
         protected override string Id { get; } = SampleProcess.Program.Id;
-        protected override string ExePath { get; } = @"..\..\..\XUnitRemote.Test.SampleProcess\bin\Debug\XUnitRemote.Test.SampleProcess.exe";
+        protected override string ExePath { get; } = Common.SampleProcessPath;
 
         public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink) : base(diagnosticMessageSink)
+        {
+        }
+    }
+
+    public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscovererBase
+    {
+        protected override string Id { get; } = SampleProcess.Program.Id;
+        protected override string ExePath { get; } = Common.SampleProcessPath;
+
+        public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink) : base(diagnosticMessageSink)
         {
         }
     }

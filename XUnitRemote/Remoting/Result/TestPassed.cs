@@ -7,11 +7,13 @@ namespace XUnitRemote.Remoting.Result
     [Serializable]
     public class TestPassed : ITestResult
     {
+        [DataMember] public string DisplayName { get; private set; }
         [DataMember] public decimal ExecutionTime { get; private set; }
         [DataMember] public string Output { get; private set; }
 
-        public TestPassed(decimal executionTime, string output)
+        public TestPassed(string displayName, decimal executionTime, string output)
         {
+            DisplayName = displayName;
             ExecutionTime = executionTime;
             Output = output;
         }

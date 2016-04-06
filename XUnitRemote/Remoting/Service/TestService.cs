@@ -19,7 +19,6 @@ using NullMessageSink = Xunit.Sdk.NullMessageSink;
 using TestFailed = XUnitRemote.Remoting.Result.TestFailed;
 using TestMessageVisitor = Xunit.Sdk.TestMessageVisitor;
 using TestPassed = XUnitRemote.Remoting.Result.TestPassed;
-using TestSkipped = XUnitRemote.Remoting.Result.TestSkipped;
 
 namespace XUnitRemote.Remoting.Service
 {
@@ -39,7 +38,7 @@ namespace XUnitRemote.Remoting.Service
             return Path.GetDirectoryName(path);
         }
 
-        public ITestResult RunTest(string assemblyPath, string typeName, string methodName)
+        public ITestResult[] RunTest(string assemblyPath, string typeName, string methodName)
         {
 
             var assembly = Assembly.LoadFrom(assemblyPath);
@@ -70,7 +69,7 @@ namespace XUnitRemote.Remoting.Service
 
             visitor.Finished.Wait();
 
-            return visitor.TestResult;
+            return visitor.TestResult.ToArray();
 
 
         }
@@ -109,24 +108,20 @@ namespace XUnitRemote.Remoting.Service
             _TCO = new TaskCompletionSource<Unit>();
         }
 
-        public ITestResult TestResult { get; private set; } = null;
+        public List<ITestResult> TestResult { get; } = new List<ITestResult>();
 
         public Task<Unit> Finished => _TCO.Task ;
 
         protected override bool Visit(ITestFailed info)
         {
-            TestResult = new TestFailed(info.ExecutionTime, info.Output, Join(", ", info.ExceptionTypes), Join(", ",info.Messages), Join("\n",info.StackTraces));
+            var r = new TestFailed(info.Test.DisplayName, info.ExecutionTime, info.Output, Join(", ", info.ExceptionTypes), Join(", ",info.Messages), Join("\n",info.StackTraces));
+            TestResult.Add(r);
             return true;
-        }
-        protected override bool Visit(ITestSkipped info)
-        {
-            TestResult = new TestSkipped(info.Reason);
-            return true;
-
         }
         protected override bool Visit(ITestPassed info)
         {
-            TestResult = new TestPassed(info.ExecutionTime, info.Output);
+            var r = new TestPassed(info.Test.DisplayName, info.ExecutionTime, info.Output);
+            TestResult.Add(r);
             return true;
         }
 

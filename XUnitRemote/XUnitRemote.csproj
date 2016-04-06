@@ -96,7 +96,6 @@
     <Compile Include="Remoting\Result\ITestResult.cs" />
     <Compile Include="Remoting\Result\TestFailed.cs" />
     <Compile Include="Remoting\Result\TestPassed.cs" />
-    <Compile Include="Remoting\Result\TestSkipped.cs" />
     <Compile Include="Remoting\Service\ITestService.cs" />
     <Compile Include="Remoting\Service\TestService.cs" />
     <Compile Include="Remoting\TestExecutionFault.cs" />

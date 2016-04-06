@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +17,6 @@ using XUnitRemote.Remoting.Result;
 using XUnitRemote.Remoting.Service;
 using TestFailed = XUnitRemote.Remoting.Result.TestFailed;
 using TestPassed = XUnitRemote.Remoting.Result.TestPassed;
-using TestSkipped = XUnitRemote.Remoting.Result.TestSkipped;
 
 namespace XUnitRemote
 {
@@ -70,9 +72,15 @@ namespace XUnitRemote
                             TestCase.Method.Type.Assembly.AssemblyPath,
                             TestCase.Method.Type.Name,
                             TestCase.Method.Name);
-                        var test = new XunitTest(TestCase, DisplayName);
-                        var message = GetMessageFromTestResult(test, testResult);
-                        MessageBus.QueueMessage(message);
+                        int i = 0;
+                        foreach (var result in testResult)
+                        {
+                            var test = new XunitTest(TestCase, result.DisplayName);
+                            MessageBus.QueueMessage(new TestStarting(test));
+                            var message = GetMessageFromTestResult(test, result);
+                            MessageBus.QueueMessage(message);
+                            MessageBus.QueueMessage(new TestFinished(test, result.ExecutionTime, result.Output));
+                        }
                         return GetRunSummary(testResult);
                     }
                     catch (FaultException<TestExecutionFault> fault)
@@ -140,24 +148,15 @@ namespace XUnitRemote
             }
         }
 
-        private static RunSummary GetRunSummary(ITestResult testResult)
+        private static RunSummary GetRunSummary(ITestResult[] testResults)
         {
-            if (testResult is TestSkipped)
-            {
-                return new RunSummary { Failed = 0, Skipped = 1, Total = 1, Time = 0m};
-            }
-            var failed = testResult as TestFailed;
-            if (failed != null)
-            {
-                return new RunSummary { Failed = 1, Skipped = 0, Total = 1, Time = failed.ExecutionTime };
-            }
-            var passed = testResult as TestPassed;
-            if (passed != null)
-            {
-                return new RunSummary { Failed = 0, Skipped = 0, Total = 1, Time = passed.ExecutionTime };
-            }
-            var resultTypeName = testResult?.GetType().FullName ?? "<unknown>";
-            throw new TestExecutionException("Cannot get summary for the following implementation of `ITestExecutionResult`: " + resultTypeName);
+            int failed = testResults.OfType<TestFailed>().Count();
+            int skipped = testResults.OfType<TestSkipped>().Count();
+            int total = testResults.Length;
+            var time = testResults.OfType<TestPassed>().Sum(r => r.ExecutionTime) +
+                       testResults.OfType<TestFailed>().Sum(r => r.ExecutionTime);
+
+            return new RunSummary() {Failed = failed, Skipped = skipped, Total = total, Time = time};
         }
 
         private static IMessageSinkMessage GetMessageFromTestResult(ITest test, ITestResult testResult)
@@ -171,11 +170,6 @@ namespace XUnitRemote
             if (passed != null)
             {
                 return new Xunit.Sdk.TestPassed(test, passed.ExecutionTime, passed.Output);
-            }
-            var skipped = testResult as TestSkipped;
-            if (skipped != null)
-            {
-                return new Xunit.Sdk.TestSkipped(test, skipped.SkipReason);
             }
             var resultTypeName = testResult?.GetType().FullName ?? "<unknown>";
             throw new TestExecutionException("Cannot get message for the following implementation of `ITestExecutionResult`: " + resultTypeName);
