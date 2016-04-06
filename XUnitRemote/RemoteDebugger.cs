@@ -41,16 +41,26 @@ namespace XUnitRemote
             {
                 MessageFilter.Register();
 
-                var process = Retry(() => Process(pid));
+                var process = Retry(() => VisualStudio.GetProcess(pid));
                 if(process==null)
                     throw new DebuggerException($"Pid {pid} not found. Can't start debugger");
 
-                Retry(process.Attach);
+                if (!Retry(()=> process.IsAttached()))
+                {
+                    Retry(process.Attach);
 
-                if(!Retry(()=>IsDebuggerAttached(process.ProcessID)))
-                    throw new DebuggerException();
+                    if(!Retry(process.IsAttached))
+                        throw new DebuggerException();
 
-                return Disposable.Create(() => Detach(process));
+                    return Disposable.Create(() =>
+                    {
+                        if (Retry(process.IsAttached))
+                            Retry(() => process.Detach(true));
+                    });
+                }
+
+                // If the debugger was already connected then don't detach it.
+                return Disposable.Empty;
 
             }
             catch (COMException e)
@@ -58,56 +68,6 @@ namespace XUnitRemote
                 throw new DebuggerException(e);
             }
         }
-
-        private static Process Process(int pid)
-        {
-            return Dte
-                .Debugger
-                .LocalProcesses
-                .Cast<Process>()
-                .SingleOrDefault(x => x.ProcessID == pid);
-        }
-
-        public static void Detach(int pid)
-        {
-            Detach(Process(pid));
-        }
-
-        private static void Detach(Process p)
-        {
-            try
-            {
-                if (IsDebuggerAttached(p.ProcessID))
-                    p.Detach();
-            }
-            catch (Exception e)
-            {
-            }
-        }
-
-        private static bool IsDebuggerAttached()
-        {
-            return IsDebuggerAttached(System.Diagnostics.Process.GetCurrentProcess().Id);
-        }
-
-        public static bool IsDebuggerAttached(int pid) => Dte
-            .Debugger
-            .DebuggedProcesses
-            .Cast<Process>()
-            .Any(p => p.ProcessID == pid);
-
-
-        /// <summary>
-        /// Update this when you upgrade visual studio
-        /// </summary>
-        private const string VisualStudioVersion = "14";
-        private static string VisualStudioComId => $"VisualStudio.DTE.{VisualStudioVersion}.0";
-
-        /// <summary>
-        /// Get the visual studio DTE object
-        /// </summary>
-        private static DTE Dte => (DTE) Marshal.GetActiveObject(VisualStudioComId);
-
     }
 
     public class DebuggerException : Exception

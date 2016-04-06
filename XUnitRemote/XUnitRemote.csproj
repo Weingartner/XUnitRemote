@@ -87,6 +87,7 @@
     <Compile Include="IOleMessageFilter.cs" />
     <Compile Include="IsolateBase.cs" />
     <Compile Include="MessageFilter.cs" />
+    <Compile Include="VisualStudio.cs" />
     <Compile Include="XUnitRemoteFactDiscovererBase.cs" />
     <Compile Include="XUnitRemoteTestCase.cs" />
     <Compile Include="XUnitRemoteTestCaseRunner.cs" />

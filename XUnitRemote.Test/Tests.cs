@@ -31,14 +31,14 @@ namespace XUnitRemote.Test
         [SampleProcessFact]
         public void OutOfProcess()
         {
-            _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
+            _Output.WriteLine("GetProcess name: " + Process.GetCurrentProcess().ProcessName);
             Assert.Equal(5, 5);
         }
 
         [Fact]
         public void InProcess()
         {
-            _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
+            _Output.WriteLine("GetProcess name: " + Process.GetCurrentProcess().ProcessName);
             Assert.Equal(5, 3);
         }
     }

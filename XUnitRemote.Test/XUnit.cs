@@ -12,7 +12,7 @@ namespace XUnitRemote.Test
     /// <![CDATA[
     /// [SampleProcessFact]
     /// public void TestShouldWork(){
-    ///    Assert.Equal("SampleProcess",Process.GetCurrentProcess().ProcessName)
+    ///    Assert.Equal("SampleProcess",GetProcess.GetCurrentProcess().ProcessName)
     ///    Assert.IsTrue(1==2);
     /// }
     /// ]]>

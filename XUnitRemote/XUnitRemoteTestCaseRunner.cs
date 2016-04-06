@@ -114,7 +114,7 @@ namespace XUnitRemote
             };
             if (!process.Start())
             {
-                throw new TestExecutionException("Process couldn't be started.");
+                throw new TestExecutionException("GetProcess couldn't be started.");
             }
             return process;
         }
