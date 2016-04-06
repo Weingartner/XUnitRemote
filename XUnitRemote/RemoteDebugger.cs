@@ -13,7 +13,7 @@ namespace XUnitRemote
     {
         public static IDisposable CascadeDebugging(int pid)
         {
-            return IsDebuggerAttached() ? Attach(pid) : Disposable.Empty;
+            return Debugger.IsAttached ? Attach(pid) : Disposable.Empty;
         }
 
         public static TR Retry<TR>(Func<TR> fn)
@@ -44,10 +44,10 @@ namespace XUnitRemote
                 var process = Retry(() => Process(pid));
                 if(process==null)
                     throw new DebuggerException($"Pid {pid} not found. Can't start debugger");
-                        process.Attach();
+
                 Retry(process.Attach);
 
-                if(!IsDebuggerAttached(process.ProcessID))
+                if(!Retry(()=>IsDebuggerAttached(process.ProcessID)))
                     throw new DebuggerException();
 
                 return Disposable.Create(() => Detach(process));
