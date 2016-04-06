@@ -28,18 +28,19 @@ namespace XUnitRemote
         /// Start the XUnit WCF service running.
         /// </summary>
         /// <param name="id">The unique id to assign to this service</param>
+        /// <param name="isolateInDomain">Isolate each test in it's own AppDomain</param>
         /// <param name="marshaller">A synchronous function that may execute the test on a different dispatcher and wait for the result. Usefull for tests
-        /// where the code must be run on a specific dispatcher</param>
+        ///     where the code must be run on a specific dispatcher</param>
         /// <param name="data">A dictionary of data that will be assigned to XUnitService.Data in the child app domains. All objects
-        /// must be serializable</param>
+        ///     must be serializable</param>
         /// <param name="timeout">How long the service runs</param>
         /// <returns></returns>
-        public static async Task Start(string id, Func<Func<ITestResult[]>,ITestResult[]> marshaller=null, Dictionary<string, object> data=null, TimeSpan? timeout = null)
+        public static async Task Start(string id, bool isolateInDomain, Func<Func<ITestResult[]>, ITestResult[]> marshaller = null, Dictionary<string, object> data = null, TimeSpan? timeout = null)
         {
             // Use a default dispatcher if none is provided
             marshaller = marshaller ?? (f => f());
 
-            using (var host = new ServiceHost(new TestDispatcher(marshaller, data), Array.Empty<Uri>()))
+            using (var host = new ServiceHost(new TestDispatcher(marshaller, data, isolateInDomain), Array.Empty<Uri>()))
             {
                 NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
                 Uri address = Address(id);
@@ -65,23 +66,18 @@ namespace XUnitRemote
         public Dictionary<string, object> Data { get; }
 
         private readonly Func<Func<ITestResult[]>,ITestResult[]> _Marshaller;
+        private readonly bool _IsolateInDomain;
         private readonly ITestService _Service = new TestService();
 
-        public TestDispatcher(Func<Func<ITestResult[]>, ITestResult[]> marshaller, Dictionary<string, object> data)
+        public TestDispatcher(Func<Func<ITestResult[]>, ITestResult[]> marshaller, Dictionary<string, object> data, bool isolateInDomain = true)
         {
             Data = data;
             _Marshaller = marshaller;
+            _IsolateInDomain = isolateInDomain;
         }
 
         ITestResult [] ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
-            _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName, Data));
-
-        private static void Callback(string assemblyPath, string typeName, string methodName)
-        {
-            var service = new TestService();
-            var r = service.RunTest(assemblyPath, typeName, methodName);
-            AppDomain.CurrentDomain.SetData("Result", r);
-        }
+            _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName, Data, _IsolateInDomain));
     }
 
     [Serializable]
@@ -106,10 +102,15 @@ namespace XUnitRemote
             return new TestService().RunTest(_AssemblyPath, _TypeName, _MethodName);
         }
 
-        public static ITestResult [] Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data)
+        public static ITestResult[] Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data, bool isolateInDomain)
         {
-            var i = new IsolatedTestRunner(assemblyPath, typeName, methodName, data);
-            return i.Run();
+            if (isolateInDomain)
+            {
+                return new IsolatedTestRunner(assemblyPath, typeName, methodName, data).Run();
+            }
+
+            XUnitService.Data = data;
+            return new TestService().RunTest(assemblyPath, typeName, methodName);
         }
     }
 }

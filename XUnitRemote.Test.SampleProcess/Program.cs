@@ -23,7 +23,7 @@ namespace SampleProcess
         private static void Main()
         {
             Dictionary<string, object> data = new Dictionary<string, object>() { {"foo", 10}, {"bar", "hello"} };
-            XUnitService.Start(Id,null,data).Wait();
+            XUnitService.Start(Id, isolateInDomain: false, marshaller: null, data: data).Wait();
         }
     }
 }

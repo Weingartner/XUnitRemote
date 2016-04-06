@@ -83,7 +83,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FooCallback.cs" />
     <Compile Include="IOleMessageFilter.cs" />
     <Compile Include="IsolateBase.cs" />
     <Compile Include="MessageFilter.cs" />
