@@ -46,6 +46,7 @@ namespace XUnitRemote
         }
     }
 
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class TestDispatcher : ITestService
     {
         private readonly Func<Func<ITestResult>,ITestResult> _Marshaller;
