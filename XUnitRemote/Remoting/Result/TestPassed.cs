@@ -1,8 +1,10 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace XUnitRemote.Remoting.Result
 {
     [DataContract]
+    [Serializable]
     public class TestPassed : ITestResult
     {
         [DataMember] public decimal ExecutionTime { get; private set; }

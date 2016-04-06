@@ -1,7 +1,9 @@
-﻿using System.Runtime.Serialization;
+﻿using System;
+using System.Runtime.Serialization;
 
 namespace XUnitRemote.Remoting.Result
 {
+    [Serializable]
     [DataContract]
     public class TestFailed : ITestResult
     {

@@ -46,9 +46,11 @@ namespace XUnitRemote
         }
     }
 
+
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class TestDispatcher : ITestService
     {
+
         private readonly Func<Func<ITestResult>,ITestResult> _Marshaller;
         private readonly ITestService _Service = new TestService();
 
@@ -58,6 +60,36 @@ namespace XUnitRemote
         }
 
         ITestResult ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
-            _Marshaller(() => _Service.RunTest(assemblyPath, typeName, methodName));
+            _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName));
+
+        private static void Callback(string assemblyPath, string typeName, string methodName)
+        {
+            var service = new TestService();
+            var r = service.RunTest(assemblyPath, typeName, methodName);
+            AppDomain.CurrentDomain.SetData("Result", r);
+        }
+    }
+
+    [Serializable]
+    public class IsolatedTestRunner : IsolateBase<ITestResult>
+    {
+        private readonly string _AssemblyPath;
+        private readonly string _TypeName;
+        private readonly string _MethodName;
+
+        public IsolatedTestRunner(string assemblyPath, string typeName, string methodName):base("xunit.single.test")
+        {
+            _AssemblyPath = assemblyPath;
+            _TypeName = typeName;
+            _MethodName = methodName;
+        }
+
+        protected override ITestResult RunImpl() => new TestService().RunTest(_AssemblyPath, _TypeName, _MethodName);
+
+        public static ITestResult Run(string assemblyPath, string typeName, string methodName)
+        {
+            var i = new IsolatedTestRunner(assemblyPath, typeName, methodName);
+            return i.Run();
+        }
     }
 }

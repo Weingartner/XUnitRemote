@@ -1,4 +1,6 @@
-﻿namespace XUnitRemote.Remoting.Result
+﻿using System;
+
+namespace XUnitRemote.Remoting.Result
 {
     public interface ITestResult
     {
