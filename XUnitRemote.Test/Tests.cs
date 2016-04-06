@@ -8,9 +8,24 @@ namespace XUnitRemote.Test
     {
         private readonly ITestOutputHelper _Output;
 
+        public int Foo => (int)XUnitService.Data["foo"]; 
+        public string Bar => (string)XUnitService.Data["bar"]; 
+
         public Tests(ITestOutputHelper output)
         {
             _Output = output;
+        }
+
+        [SampleProcessFact]
+        public void CanGetFoo()
+        {
+            Assert.Equal(Foo, 10);
+        }
+
+        [SampleProcessFact]
+        public void CanGetBar()
+        {
+            Assert.Equal(Bar, "hello");
         }
 
         [SampleProcessFact]
