@@ -11,6 +11,7 @@ namespace XUnitRemote
 {
     public class VisualStudio
     {
+        #region getting the dte
         /// <summary>
         /// Copied from http://stackoverflow.com/a/14205934/158285
         /// </summary>
@@ -51,13 +52,25 @@ namespace XUnitRemote
 
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable prot);
+        #endregion
 
+        /// <summary>
+        /// Is the specific visual studio instance attached to the specific process
+        /// </summary>
+        /// <param name="dte"></param>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         public static bool IsDebuggerAttached(DTE dte, int pid) => dte
             .Debugger
             .DebuggedProcesses
             .Cast<Process>()
             .Any(p => p.ProcessID == pid);
 
+        /// <summary>
+        /// Get the visual studio instance that is attached to the specified pid. 
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns>the visual studio instance or null</returns>
         public static DTE Current(int pid) =>
             GetInstances().FirstOrDefault(dte => IsDebuggerAttached(dte, pid));
 
@@ -66,7 +79,16 @@ namespace XUnitRemote
         /// </summary>
         public static DTE Current() => VisualStudio.Current(System.Diagnostics.Process.GetCurrentProcess().Id);
 
+        /// <summary>
+        /// Is a visual studio instance attached to the current process?
+        /// </summary>
+        /// <returns></returns>
         public static bool IsAttached() => Current() != null;
+        /// <summary>
+        /// Is a visual studio instance attached to the process with the specified pid
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         public static bool IsAttached(int pid) => Current(pid) != null;
 
         public static Process GetProcess(int pid)
