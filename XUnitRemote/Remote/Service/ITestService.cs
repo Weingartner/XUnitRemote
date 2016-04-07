@@ -14,6 +14,7 @@ namespace XUnitRemote.Remote.Service
 
     [ServiceKnownType(typeof(TestPassed))]
     [ServiceKnownType(typeof(TestFailed))]
+    [ServiceKnownType(typeof(TestSkipped))]
     public interface ITestResultNotificationService
     {
         [OperationContract(IsOneWay = true)]

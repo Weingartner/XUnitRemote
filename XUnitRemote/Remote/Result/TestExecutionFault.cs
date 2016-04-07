@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace XUnitRemote.Remote
+namespace XUnitRemote.Remote.Result
 {
     [DataContract]
     public class TestExecutionFault

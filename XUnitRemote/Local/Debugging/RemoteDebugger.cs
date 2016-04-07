@@ -51,9 +51,12 @@ namespace XUnitRemote.Local.Debugging
                         // If we attached the debugger we should also detach it
                         return Disposable.Create(() =>
                         {
-                            if (Retry(process.HasDebuggerAttached))
+                            using (MessageFilter.Register())
                             {
+                                if (Retry(process.HasDebuggerAttached))
+                                {
                                 Retry(() => process.Detach(WaitForBreakOrEnd: false));
+                                }
                             }
                         });
                     }

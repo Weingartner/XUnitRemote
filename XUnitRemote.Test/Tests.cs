@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using XUnitRemote.Local;
+using XUnitRemote.Remote;
 
 namespace XUnitRemote.Test
 {
@@ -41,6 +42,11 @@ namespace XUnitRemote.Test
         public void CanGetBar()
         {
             Assert.Equal("hello", Bar);
+        }
+
+        [SampleProcessFact(Skip="test skip")]
+        public void SkippedTest()
+        {
         }
 
         private const string ProcessName = "XUnitRemote.Test.SampleProcess";

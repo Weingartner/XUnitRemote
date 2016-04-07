@@ -14,6 +14,7 @@ using XUnitRemote.Remote.Result;
 using XUnitRemote.Remote.Service;
 using TestFailed = XUnitRemote.Remote.Result.TestFailed;
 using TestPassed = XUnitRemote.Remote.Result.TestPassed;
+using TestSkipped = XUnitRemote.Remote.Result.TestSkipped;
 
 namespace XUnitRemote.Local
 {
@@ -95,7 +96,7 @@ namespace XUnitRemote.Local
         private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id, Action<ITestResult> onTestFinished)
         {
             var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None) { SendTimeout = TimeSpan.FromMinutes(60) };
-            var address = XUnitService.Address(id);
+            var address = new Uri(XUnitService.BaseUrl, id);
             var channelFactory = new DuplexChannelFactory<ITestService>(new TestServiceNotificationHandler(onTestFinished), binding, address.ToString());
             return channelFactory;
         }
@@ -151,7 +152,7 @@ namespace XUnitRemote.Local
             return new RunSummary
             {
                 Failed = result is TestFailed ? 1 : 0,
-                Skipped = 0,
+                Skipped = result is TestSkipped ? 1 : 0,
                 Total = 1,
                 Time = result.ExecutionTime
             };
@@ -163,6 +164,11 @@ namespace XUnitRemote.Local
             if (failed != null)
             {
                 return new Xunit.Sdk.TestFailed(test, failed.ExecutionTime, failed.Output, failed.ExceptionTypes, failed.ExceptionMessages, failed.ExceptionStackTraces, new [] { -1 });
+            }
+            var skipped = testResult as TestSkipped;
+            if (skipped != null)
+            {
+                return new Xunit.Sdk.TestSkipped(test, skipped.SkipReason);
             }
             var passed = testResult as TestPassed;
             if (passed != null)

@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
-using XUnitRemote.Local;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using XUnitRemote.Remote;
 
 namespace XUnitRemote.Test.SampleProcess
 {
@@ -9,8 +12,13 @@ namespace XUnitRemote.Test.SampleProcess
 
         private static void Main()
         {
+            SpinWait.SpinUntil(() => Debugger.IsAttached, TimeSpan.FromSeconds(5));
             var data = new Dictionary<string, object> { { "foo", 10 }, { "bar", "hello" } };
-            XUnitService.Start(Id, isolateInDomain: false, marshaller: null, data: data).Wait();
+            using (XUnitService.StartWithDefaultRunner(new TestServiceConfiguration(Id, data)))
+            {
+                Console.WriteLine("Press <Enter> to exit . . .");
+                Console.ReadLine();
+            }
         }
     }
 }

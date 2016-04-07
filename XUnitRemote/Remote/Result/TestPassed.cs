@@ -3,8 +3,8 @@ using System.Runtime.Serialization;
 
 namespace XUnitRemote.Remote.Result
 {
-    [DataContract]
     [Serializable]
+    [DataContract]
     public class TestPassed : ITestResult
     {
         [DataMember] public string DisplayName { get; private set; }
