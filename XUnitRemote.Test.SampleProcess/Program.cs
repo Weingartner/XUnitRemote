@@ -1,20 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.ServiceModel;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Xunit;
-using Xunit.Runners;
-using XUnitRemote;
-using XUnitRemote.Remoting;
-using XUnitRemote.Remoting.Service;
+﻿using System.Collections.Generic;
+using XUnitRemote.Local;
 
-namespace SampleProcess
+namespace XUnitRemote.Test.SampleProcess
 {
     public static class Program
     {
@@ -22,7 +9,7 @@ namespace SampleProcess
 
         private static void Main()
         {
-            Dictionary<string, object> data = new Dictionary<string, object>() { {"foo", 10}, {"bar", "hello"} };
+            var data = new Dictionary<string, object> { { "foo", 10 }, { "bar", "hello" } };
             XUnitService.Start(Id, isolateInDomain: false, marshaller: null, data: data).Wait();
         }
     }

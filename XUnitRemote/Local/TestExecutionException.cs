@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local
 {
     [Serializable]
     public class TestExecutionException : Exception

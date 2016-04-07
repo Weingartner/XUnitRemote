@@ -73,9 +73,8 @@
       <HintPath>$(SolutionDir)packages\xunit.extensibility.core.2.1.0\lib\dotnet\xunit.core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="xunit.execution.desktop, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\..\WeinCadSW\swcsharpmf\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="xunit.execution.desktop">
+      <HintPath>..\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
     </Reference>
     <Reference Include="xunit.runner.utility.desktop, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <HintPath>$(SolutionDir)packages\xunit.runner.utility.2.1.0\lib\net35\xunit.runner.utility.desktop.dll</HintPath>
@@ -83,28 +82,30 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IOleMessageFilter.cs" />
-    <Compile Include="IsolateBase.cs" />
-    <Compile Include="MessageFilter.cs" />
-    <Compile Include="VisualStudio.cs" />
-    <Compile Include="XUnitRemoteFactDiscovererBase.cs" />
-    <Compile Include="XUnitRemoteTestCase.cs" />
-    <Compile Include="XUnitRemoteTestCaseRunner.cs" />
+    <Compile Include="Local\Debugging\DebuggerException.cs" />
+    <Compile Include="Local\Debugging\IOleMessageFilter.cs" />
+    <Compile Include="Remote\Isolation\IsolateBase.cs" />
+    <Compile Include="Local\Debugging\MessageFilter.cs" />
+    <Compile Include="Local\Debugging\VisualStudio.cs" />
+    <Compile Include="Local\XUnitRemoteTestCaseDiscoverer.cs" />
+    <Compile Include="Local\XUnitRemoteTestCase.cs" />
+    <Compile Include="Local\XUnitRemoteTestCaseRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RemoteDebugger.cs" />
-    <Compile Include="Remoting\Result\ITestResult.cs" />
-    <Compile Include="Remoting\Result\TestFailed.cs" />
-    <Compile Include="Remoting\Result\TestPassed.cs" />
-    <Compile Include="Remoting\Service\ITestService.cs" />
-    <Compile Include="Remoting\Service\TestService.cs" />
-    <Compile Include="Remoting\TestExecutionFault.cs" />
-    <Compile Include="TestExecutionException.cs" />
-    <Compile Include="XUnitService.cs" />
+    <Compile Include="Local\Debugging\RemoteDebugger.cs" />
+    <Compile Include="Remote\Result\ITestResult.cs" />
+    <Compile Include="Remote\Result\TestFailed.cs" />
+    <Compile Include="Remote\Result\TestPassed.cs" />
+    <Compile Include="Remote\Service\ITestService.cs" />
+    <Compile Include="Remote\Service\TestService.cs" />
+    <Compile Include="Remote\TestExecutionFault.cs" />
+    <Compile Include="Local\TestExecutionException.cs" />
+    <Compile Include="Local\XUnitService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="XUnitRemote.nuspec" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

@@ -1,12 +1,12 @@
 using System;
 using System.Runtime.InteropServices;
-using Debugger = System.Diagnostics.Debugger;
-using Process = EnvDTE.Process;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local.Debugging
 {
-    [ComImport, Guid("00000016-0000-0000-C000-000000000046"),
-     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    /// <summary>
+    /// https://msdn.microsoft.com/en-us/library/ms228772.aspx?f=255&MSPPError=-2147217396
+    /// </summary>
+    [ComImport, Guid("00000016-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IOleMessageFilter
     {
         [PreserveSig]

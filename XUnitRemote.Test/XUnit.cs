@@ -2,6 +2,7 @@
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using XUnitRemote.Local;
 using FactAttribute = Xunit.FactAttribute;
 
 namespace XUnitRemote.Test
@@ -9,15 +10,13 @@ namespace XUnitRemote.Test
 
     /// <summary>
     /// This is the custom attribute you add to tests you wish to run under the control of SampleProcess.
-    /// For example your unit test will look like
+    /// For example your unit test can look like
     /// <![CDATA[
     /// [SampleProcessFact]
     /// public void TestShouldWork(){
-    ///    Assert.Equal("SampleProcess",GetProcess.GetCurrentProcess().ProcessName)
-    ///    Assert.IsTrue(1==2);
+    ///     Assert.Equal("SampleProcess", GetProcess.GetCurrentProcess().ProcessName)
     /// }
     /// ]]>
-    /// and it will be executed within "SampleProcess" not the visual studio process.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method)]
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessFactDiscoverer", "XUnitRemote.Test")]
@@ -27,32 +26,27 @@ namespace XUnitRemote.Test
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessTheoryDiscoverer", "XUnitRemote.Test")]
     public class SampleProcessTheoryAttribute : TheoryAttribute { }
 
-    internal class Common
+    internal static class Common
     {
-        public static string SampleProcessPath = @"..\..\..\XUnitRemote.Test.SampleProcess\bin\Debug\XUnitRemote.Test.SampleProcess.exe";
+        public const string SampleProcessPath = @"..\..\..\XUnitRemote.Test.SampleProcess\bin\Debug\XUnitRemote.Test.SampleProcess.exe";
     }
-
 
     /// <summary>
     /// This is the xunit fact discoverer that xunit uses to replace the standard xunit runner
     /// with our runner. Anything that is tagged with the above attribute will use this discoverer. 
     /// </summary>
-    public class SampleProcessFactDiscoverer : XUnitRemoteFactDiscovererBase
+    public class SampleProcessFactDiscoverer : XUnitRemoteFactDiscoverer
     {
-        protected override string Id { get; } = SampleProcess.Program.Id;
-        protected override string ExePath { get; } = Common.SampleProcessPath;
-
-        public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink) : base(diagnosticMessageSink)
+        public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
         {
         }
     }
 
-    public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscovererBase
+    public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscoverer
     {
-        protected override string Id { get; } = SampleProcess.Program.Id;
-        protected override string ExePath { get; } = Common.SampleProcessPath;
-
-        public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink) : base(diagnosticMessageSink)
+        public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
         {
         }
     }

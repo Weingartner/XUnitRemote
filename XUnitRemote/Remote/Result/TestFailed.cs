@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace XUnitRemote.Remoting.Result
+namespace XUnitRemote.Remote.Result
 {
     [Serializable]
     [DataContract]
@@ -14,14 +14,14 @@ namespace XUnitRemote.Remoting.Result
         [DataMember] public string[] ExceptionMessages { get; private set; }
         [DataMember] public string[] ExceptionStackTraces { get; private set; }
 
-        public TestFailed(string displayName, decimal executionTime, string output, string exceptionType, string exceptionMessage, string exceptionStackTrace)
+        public TestFailed(string displayName, decimal executionTime, string output, string[] exceptionTypes, string[] exceptionMessages, string[] exceptionStackTraces)
         {
             DisplayName = displayName;
             ExecutionTime = executionTime;
             Output = output;
-            ExceptionTypes = new[] { exceptionType };
-            ExceptionMessages = new[] { exceptionMessage };
-            ExceptionStackTraces = new[] { exceptionStackTrace };
+            ExceptionTypes = exceptionTypes;
+            ExceptionMessages = exceptionMessages;
+            ExceptionStackTraces = exceptionStackTraces;
         }
     }
 }

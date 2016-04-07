@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace XUnitRemote.Remoting.Result
+namespace XUnitRemote.Remote.Result
 {
     [DataContract]
     [Serializable]

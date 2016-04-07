@@ -10,9 +10,10 @@ using System.Reactive;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-using XUnitRemote.Remoting.Service;
+using XUnitRemote.Remote.Isolation;
+using XUnitRemote.Remote.Service;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local
 {
     public static class XUnitService
     {

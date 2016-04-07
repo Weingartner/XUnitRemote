@@ -1,8 +1,7 @@
-using System.Security.Cryptography.X509Certificates;
 using System.ServiceModel;
-using XUnitRemote.Remoting.Result;
+using XUnitRemote.Remote.Result;
 
-namespace XUnitRemote.Remoting.Service
+namespace XUnitRemote.Remote.Service
 {
     [ServiceContract(CallbackContract = typeof(ITestResultNotificationService))]
     public interface ITestService

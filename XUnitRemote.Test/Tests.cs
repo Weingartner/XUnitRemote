@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
+using XUnitRemote.Local;
 
 namespace XUnitRemote.Test
 {
@@ -10,8 +11,8 @@ namespace XUnitRemote.Test
     {
         private readonly ITestOutputHelper _Output;
 
-        public int Foo => (int)XUnitService.Data["foo"]; 
-        public string Bar => (string)XUnitService.Data["bar"]; 
+        private static int Foo => (int)XUnitService.Data["foo"];
+        private static string Bar => (string)XUnitService.Data["bar"]; 
 
         public Tests(ITestOutputHelper output)
         {
@@ -21,40 +22,41 @@ namespace XUnitRemote.Test
         [SampleProcessFact]
         public void CanGetFoo()
         {
-            Assert.Equal(Foo, 10);
+            Assert.Equal(10, Foo);
         }
 
         [SampleProcessTheory]
-        //[Theory]
         [InlineData(1, 2, 3)]
         [InlineData(5, 6, 7)]
         [InlineData(8, 9, 10)]
         public async Task TestData(int a, int b, int c)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3));
-            Assert.Equal(b-a,1);
-            Assert.True(b>6);
-            Assert.Equal(c-b,1);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Assert.Equal(1, b-a);
+            Assert.Equal(1, c-b);
+            //Assert.True(b >= 6);
         }
 
         [SampleProcessFact]
         public void CanGetBar()
         {
-            Assert.Equal(Bar, "hello");
+            Assert.Equal("hello", Bar);
         }
+
+        private const string ProcessName = "XUnitRemote.Test.SampleProcess";
 
         [SampleProcessFact]
         public void OutOfProcess()
         {
-            _Output.WriteLine("GetProcess name: " + Process.GetCurrentProcess().ProcessName);
-            Assert.Equal(5, 5);
+            _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
+            Assert.Equal(ProcessName, Process.GetCurrentProcess().ProcessName);
         }
 
         [Fact]
         public void InProcess()
         {
-            _Output.WriteLine("GetProcess name: " + Process.GetCurrentProcess().ProcessName);
-            Assert.Equal(5, 3);
+            _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
+            Assert.NotEqual(ProcessName, Process.GetCurrentProcess().ProcessName);
         }
     }
 }

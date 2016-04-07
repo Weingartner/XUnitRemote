@@ -1,9 +1,8 @@
 using System;
 using System.IO;
 using System.Reflection;
-using XUnitRemote.Remoting.Result;
 
-namespace XUnitRemote
+namespace XUnitRemote.Remote.Isolation
 {
     /// <summary>
     /// Abstract base class for creating callback in a child app domain and getting
@@ -15,7 +14,6 @@ namespace XUnitRemote
     public abstract class IsolateBase<T>
     {
         private readonly string _DomainName;
-        private string _ResultKey = "Result";
 
         protected IsolateBase(string domainName)
         {
@@ -24,7 +22,9 @@ namespace XUnitRemote
 
         private static AppDomain CloneDomain(string name)
         {
-            string path = (new System.Uri(Assembly.GetExecutingAssembly().CodeBase)).AbsolutePath;
+            // TODO also resolve assemblies in AppDomain.CurrentDomain.BaseDirectory
+
+            var path = new Uri(Assembly.GetExecutingAssembly().CodeBase).AbsolutePath;
             var dir = Path.GetDirectoryName(path);
             var domaininfo = AppDomain.CurrentDomain.SetupInformation;
             domaininfo.ApplicationBase = dir;
@@ -34,9 +34,10 @@ namespace XUnitRemote
 
         public T Run()
         {
+            const string resultKey = "Result";
             var domain = CloneDomain(_DomainName);
-            domain.DoCallBack(() => AppDomain.CurrentDomain.SetData(_ResultKey, RunImpl()));
-            var rr = (T)domain.GetData(_ResultKey);
+            domain.DoCallBack(() => AppDomain.CurrentDomain.SetData(resultKey, RunImpl()));
+            var rr = (T)domain.GetData(resultKey);
             AppDomain.Unload(domain);
             GC.Collect();
             return rr;

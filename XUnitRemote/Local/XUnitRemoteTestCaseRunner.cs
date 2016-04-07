@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 using Polly;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using XUnitRemote.Remoting;
-using XUnitRemote.Remoting.Result;
-using XUnitRemote.Remoting.Service;
-using TestFailed = XUnitRemote.Remoting.Result.TestFailed;
-using TestPassed = XUnitRemote.Remoting.Result.TestPassed;
+using XUnitRemote.Local.Debugging;
+using XUnitRemote.Remote;
+using XUnitRemote.Remote.Result;
+using XUnitRemote.Remote.Service;
+using TestFailed = XUnitRemote.Remote.Result.TestFailed;
+using TestPassed = XUnitRemote.Remote.Result.TestPassed;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local
 {
     public class XUnitRemoteTestCaseRunner : XunitTestCaseRunner
     {

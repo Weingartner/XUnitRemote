@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local
 {
     public class XUnitRemoteTestCase : XunitTestCase
     {

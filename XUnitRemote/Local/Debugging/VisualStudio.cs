@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using System.Threading.Tasks;
 using EnvDTE;
 
-namespace XUnitRemote
+namespace XUnitRemote.Local.Debugging
 {
-    public class VisualStudio
+    public static class VisualStudio
     {
         #region getting the dte
         /// <summary>
         /// Copied from http://stackoverflow.com/a/14205934/158285
         /// </summary>
         /// <returns></returns>
-        public static IEnumerable<DTE> GetInstances()
+        private static IEnumerable<DTE> GetInstances()
         {
             IRunningObjectTable rot;
             IEnumMoniker enumMoniker;
@@ -71,29 +69,34 @@ namespace XUnitRemote
         /// </summary>
         /// <param name="pid"></param>
         /// <returns>the visual studio instance or null</returns>
-        public static DTE Current(int pid) =>
+        public static DTE GetDebugger(int pid) =>
             GetInstances().FirstOrDefault(dte => IsDebuggerAttached(dte, pid));
 
         /// <summary>
         /// Get the visual studio DTE object
         /// </summary>
-        public static DTE Current() => VisualStudio.Current(System.Diagnostics.Process.GetCurrentProcess().Id);
+        public static DTE GetDebuggerOfCurrentProcess() => GetDebugger(System.Diagnostics.Process.GetCurrentProcess().Id);
 
         /// <summary>
         /// Is a visual studio instance attached to the current process?
         /// </summary>
         /// <returns></returns>
-        public static bool IsAttached() => Current() != null;
+        public static bool IsDebuggingCurrentProcess() => GetDebuggerOfCurrentProcess() != null;
         /// <summary>
         /// Is a visual studio instance attached to the process with the specified pid
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        public static bool IsAttached(int pid) => Current(pid) != null;
+        public static bool IsDebugging(int pid) => GetDebugger(pid) != null;
 
+        /// <summary>
+        /// Look up process with specific id in process list of current debugger.
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         public static Process GetProcess(int pid)
         {
-            return VisualStudio.Current()
+            return GetDebuggerOfCurrentProcess()
                 .Debugger
                 .LocalProcesses
                 .Cast<Process>()
@@ -103,9 +106,9 @@ namespace XUnitRemote
 
     public static class VisualStudioProcessExtensions
     {
-        public static bool IsAttached(this Process p)
+        public static bool HasDebuggerAttached(this Process p)
         {
-            return VisualStudio.IsAttached(p.ProcessID);
+            return VisualStudio.IsDebugging(p.ProcessID);
         }
         
     }
