@@ -1,11 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reactive.Disposables;
-using System.Reflection;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,7 +40,7 @@ namespace XUnitRemote
                         var result = Policy
                             .Handle<Exception>(e => e is DebuggerException || e is EndpointNotFoundException)
                             .WaitAndRetry(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 500))
-                            .ExecuteAndCapture(() => RunTest(_ExecutablePath, _Id));
+                            .ExecuteAndCapture(() => RunTest(_Id));
                         if (result.Outcome != OutcomeType.Successful)
                         {
                             throw result.FinalException;
@@ -60,28 +56,29 @@ namespace XUnitRemote
             }
         }
 
-        private RunSummary RunTest(string processPath, string id)
+        private RunSummary RunTest(string id)
         {
-            using (var channelFactory = CreateTestServiceChannelFactory(id))
+            var runSummary = new RunSummary();
+            Action<ITestResult> onTestFinished = result =>
             {
-                Func<ITestService, RunSummary> action = service =>
+                var test = new XunitTest(TestCase, result.DisplayName);
+                MessageBus.QueueMessage(new TestStarting(test));
+                var message = GetMessageFromTestResult(test, result);
+                MessageBus.QueueMessage(message);
+                MessageBus.QueueMessage(new TestFinished(test, result.ExecutionTime, result.Output));
+                runSummary.Aggregate(GetRunSummary(result));
+            };
+
+            using (var channelFactory = CreateTestServiceChannelFactory(id, onTestFinished))
+            {
+                Action<ITestService> action = service =>
                 {
                     try
                     {
-                        var testResult = service.RunTest(
+                        service.RunTest(
                             TestCase.Method.Type.Assembly.AssemblyPath,
                             TestCase.Method.Type.Name,
                             TestCase.Method.Name);
-                        int i = 0;
-                        foreach (var result in testResult)
-                        {
-                            var test = new XunitTest(TestCase, result.DisplayName);
-                            MessageBus.QueueMessage(new TestStarting(test));
-                            var message = GetMessageFromTestResult(test, result);
-                            MessageBus.QueueMessage(message);
-                            MessageBus.QueueMessage(new TestFinished(test, result.ExecutionTime, result.Output));
-                        }
-                        return GetRunSummary(testResult);
                     }
                     catch (FaultException<TestExecutionFault> fault)
                     {
@@ -89,15 +86,16 @@ namespace XUnitRemote
                     }
                 };
 
-                return ExecuteWithChannel(channelFactory, action);
+                ExecuteWithChannel(channelFactory, action);
+                return runSummary;
             }
         }
 
-        private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id)
+        private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id, Action<ITestResult> onTestFinished)
         {
             var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
             var address = XUnitService.Address(id);
-            var channelFactory = new ChannelFactory<ITestService>(binding, address.ToString());
+            var channelFactory = new DuplexChannelFactory<ITestService>(new TestServiceNotificationHandler(onTestFinished), binding, address.ToString());
             return channelFactory;
         }
 
@@ -127,17 +125,16 @@ namespace XUnitRemote
             return process;
         }
 
-        private static TResult ExecuteWithChannel<TChannel, TResult>(ChannelFactory<TChannel> channelFactory, Func<TChannel, TResult> action)
+        private static void ExecuteWithChannel<TChannel>(ChannelFactory<TChannel> channelFactory, Action<TChannel> action)
         {
             var service = channelFactory.CreateChannel();
             var channel = (IServiceChannel) service;
             var success = false;
             try
             {
-                var result = action(service);
+                action(service);
                 channel.Close();
                 success = true;
-                return result;
             }
             finally
             {
@@ -148,15 +145,15 @@ namespace XUnitRemote
             }
         }
 
-        private static RunSummary GetRunSummary(ITestResult[] testResults)
+        private static RunSummary GetRunSummary(ITestResult result)
         {
-            int failed = testResults.OfType<TestFailed>().Count();
-            int skipped = testResults.OfType<TestSkipped>().Count();
-            int total = testResults.Length;
-            var time = testResults.OfType<TestPassed>().Sum(r => r.ExecutionTime) +
-                       testResults.OfType<TestFailed>().Sum(r => r.ExecutionTime);
-
-            return new RunSummary() {Failed = failed, Skipped = skipped, Total = total, Time = time};
+            return new RunSummary
+            {
+                Failed = result is TestFailed ? 1 : 0,
+                Skipped = 0,
+                Total = 1,
+                Time = result.ExecutionTime
+            };
         }
 
         private static IMessageSinkMessage GetMessageFromTestResult(ITest test, ITestResult testResult)
@@ -173,6 +170,21 @@ namespace XUnitRemote
             }
             var resultTypeName = testResult?.GetType().FullName ?? "<unknown>";
             throw new TestExecutionException("Cannot get message for the following implementation of `ITestExecutionResult`: " + resultTypeName);
+        }
+    }
+
+    internal class TestServiceNotificationHandler : ITestResultNotificationService
+    {
+        private readonly Action<ITestResult> _OnTestFinished;
+
+        public TestServiceNotificationHandler(Action<ITestResult> onTestFinished)
+        {
+            _OnTestFinished = onTestFinished;
+        }
+
+        public void TestFinished(ITestResult result)
+        {
+            _OnTestFinished(result);
         }
     }
 }

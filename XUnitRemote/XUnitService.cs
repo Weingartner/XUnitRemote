@@ -6,16 +6,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.Reactive;
 using System.ServiceModel;
-using System.ServiceModel.Description;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using XUnitRemote.Remoting.Result;
 using XUnitRemote.Remoting.Service;
-using Binding = System.ServiceModel.Channels.Binding;
 
 namespace XUnitRemote
 {
@@ -35,21 +30,19 @@ namespace XUnitRemote
         ///     must be serializable</param>
         /// <param name="timeout">How long the service runs</param>
         /// <returns></returns>
-        public static async Task Start(string id, bool isolateInDomain, Func<Func<ITestResult[]>, ITestResult[]> marshaller = null, Dictionary<string, object> data = null, TimeSpan? timeout = null)
+        public static async Task Start(string id, bool isolateInDomain, Action<Action> marshaller = null, Dictionary<string, object> data = null, TimeSpan? timeout = null)
         {
             // Use a default dispatcher if none is provided
             marshaller = marshaller ?? (f => f());
 
-            using (var host = new ServiceHost(new TestDispatcher(marshaller, data, isolateInDomain), Array.Empty<Uri>()))
+            using (var host = new ServiceHost(new TestDispatcher(marshaller, data, isolateInDomain)))
             {
-                NetNamedPipeBinding binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
-                Uri address = Address(id);
-                host.AddServiceEndpoint(typeof (ITestService), (Binding) binding, address);
+                var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+                var address = Address(id);
+                host.AddServiceEndpoint(typeof (ITestService), binding, address);
 
                 host.Open();
                 await Task.Delay(timeout ?? Timeout.InfiniteTimeSpan);
-                binding = (NetNamedPipeBinding) null;
-                address = (Uri) null;
             }
         }
 
@@ -65,23 +58,22 @@ namespace XUnitRemote
     {
         public Dictionary<string, object> Data { get; }
 
-        private readonly Func<Func<ITestResult[]>,ITestResult[]> _Marshaller;
+        private readonly Action<Action> _Marshaller;
         private readonly bool _IsolateInDomain;
-        private readonly ITestService _Service = new TestService();
 
-        public TestDispatcher(Func<Func<ITestResult[]>, ITestResult[]> marshaller, Dictionary<string, object> data, bool isolateInDomain = true)
+        public TestDispatcher(Action<Action> marshaller, Dictionary<string, object> data, bool isolateInDomain = true)
         {
             Data = data;
             _Marshaller = marshaller;
             _IsolateInDomain = isolateInDomain;
         }
 
-        ITestResult [] ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
+        void ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
             _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName, Data, _IsolateInDomain));
     }
 
     [Serializable]
-    public class IsolatedTestRunner : IsolateBase<ITestResult[]>
+    public class IsolatedTestRunner : IsolateBase<Unit>
     {
         private readonly string _AssemblyPath;
         private readonly string _TypeName;
@@ -96,21 +88,22 @@ namespace XUnitRemote
             _Data = data;
         }
 
-        protected override ITestResult [] RunImpl()
+        protected override Unit RunImpl()
         {
             XUnitService.Data = _Data;
-            return new TestService().RunTest(_AssemblyPath, _TypeName, _MethodName);
+            new TestService().RunTest(_AssemblyPath, _TypeName, _MethodName);
+            return Unit.Default;
         }
 
-        public static ITestResult[] Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data, bool isolateInDomain)
+        public static void Run(string assemblyPath, string typeName, string methodName, Dictionary<string, object> data, bool isolateInDomain)
         {
             if (isolateInDomain)
             {
-                return new IsolatedTestRunner(assemblyPath, typeName, methodName, data).Run();
+                new IsolatedTestRunner(assemblyPath, typeName, methodName, data).Run();
             }
 
             XUnitService.Data = data;
-            return new TestService().RunTest(assemblyPath, typeName, methodName);
+            new TestService().RunTest(assemblyPath, typeName, methodName);
         }
     }
 }

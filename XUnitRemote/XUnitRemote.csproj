@@ -102,12 +102,6 @@
     <Compile Include="XUnitService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\WeinCadSW\swcsharpmf\SolidworksAddinFramework\SolidworksAddinFramework.csproj">
-      <Project>{fe89110c-7405-4070-ab58-c83c12ce6ca5}</Project>
-      <Name>SolidworksAddinFramework</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="XUnitRemote.nuspec" />
   </ItemGroup>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reflection;
@@ -25,25 +24,18 @@ namespace XUnitRemote.Remoting.Service
     [ServiceBehavior(IncludeExceptionDetailInFaults = true)]
     public class TestService : ITestService
     {
+        private readonly ITestResultNotificationService _NotificationService;
+
         public TestService()
         {
-            Console.WriteLine("woo");
+            _NotificationService = OperationContext.Current.GetCallbackChannel<ITestResultNotificationService>();
         }
 
-        public string GetCurrentFolder()
+        public void RunTest(string assemblyPath, string typeName, string methodName)
         {
-            string codeBase = Assembly.GetExecutingAssembly().CodeBase;
-            UriBuilder uri = new UriBuilder(codeBase);
-            string path = Uri.UnescapeDataString(uri.Path);
-            return Path.GetDirectoryName(path);
-        }
-
-        public ITestResult[] RunTest(string assemblyPath, string typeName, string methodName)
-        {
-
             var assembly = Assembly.LoadFrom(assemblyPath);
             var assemblyInfo = new ReflectionAssemblyInfo(assembly);
-            var visitor = new MessageSink();
+            var visitor = new MessageSink(_NotificationService.TestFinished);
             var sourceProvider = new NullSourceInformationProvider();
             var xunit2 = new Xunit2(AppDomainSupport.Denied, sourceProvider, assemblyPath,null, false, null,visitor,true );
 
@@ -68,10 +60,6 @@ namespace XUnitRemote.Remoting.Service
             xunit2.RunTests(discoveryVisitor.TestCases, visitor, executionOptions);
 
             visitor.Finished.Wait();
-
-            return visitor.TestResult.ToArray();
-
-
         }
 
         private static bool FilterTestCase(ITestCaseDiscoveryMessage testCase, string assemblyPath, string typeName, string methodName)
@@ -101,27 +89,27 @@ namespace XUnitRemote.Remoting.Service
 
     public class MessageSink : TestMessageVisitor
     {
+        private readonly Action<ITestResult> _Callback;
         private readonly TaskCompletionSource<Unit> _TCO;
 
-        public MessageSink()
+        public MessageSink(Action<ITestResult> callback)
         {
+            _Callback = callback;
             _TCO = new TaskCompletionSource<Unit>();
         }
 
-        public List<ITestResult> TestResult { get; } = new List<ITestResult>();
-
-        public Task<Unit> Finished => _TCO.Task ;
+        public Task<Unit> Finished => _TCO.Task;
 
         protected override bool Visit(ITestFailed info)
         {
             var r = new TestFailed(info.Test.DisplayName, info.ExecutionTime, info.Output, Join(", ", info.ExceptionTypes), Join(", ",info.Messages), Join("\n",info.StackTraces));
-            TestResult.Add(r);
+            _Callback(r);
             return true;
         }
         protected override bool Visit(ITestPassed info)
         {
             var r = new TestPassed(info.Test.DisplayName, info.ExecutionTime, info.Output);
-            TestResult.Add(r);
+            _Callback(r);
             return true;
         }
 

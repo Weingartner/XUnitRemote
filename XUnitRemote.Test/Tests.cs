@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -27,8 +29,9 @@ namespace XUnitRemote.Test
         [InlineData(1, 2, 3)]
         [InlineData(5, 6, 7)]
         [InlineData(8, 9, 10)]
-        public void TestData(int a, int b, int c)
+        public async Task TestData(int a, int b, int c)
         {
+            await Task.Delay(TimeSpan.FromSeconds(3));
             Assert.Equal(b-a,1);
             Assert.True(b>6);
             Assert.Equal(c-b,1);
