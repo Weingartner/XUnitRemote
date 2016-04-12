@@ -36,18 +36,18 @@ namespace XUnitRemote.Local
             {
                 using (var process = GetOrStartProcess(_ExecutablePath))
                 using (RemoteDebugger.CascadeDebugging(process.Id))
-                    return await Task.Run(() =>
+                {
+                    var result = await Policy
+                        .Handle<DebuggerException>()
+                        .Or<EndpointNotFoundException>()
+                        .WaitAndRetryAsync(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 500))
+                        .ExecuteAndCaptureAsync(() => RunTest(_Id));
+                    if (result.Outcome != OutcomeType.Successful)
                     {
-                        var result = Policy
-                            .Handle<Exception>(e => e is DebuggerException || e is EndpointNotFoundException)
-                            .WaitAndRetry(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 500))
-                            .ExecuteAndCapture(() => RunTest(_Id));
-                        if (result.Outcome != OutcomeType.Successful)
-                        {
-                            throw result.FinalException;
-                        }
-                        return result.Result;
-                    });
+                        throw result.FinalException;
+                    }
+                    return result.Result;
+                };
             }
             catch (Exception e)
             {
@@ -57,7 +57,7 @@ namespace XUnitRemote.Local
             }
         }
 
-        private RunSummary RunTest(string id)
+        private async Task<RunSummary> RunTest(string id)
         {
             var runSummary = new RunSummary();
             Action<ITestResult> onTestFinished = result =>
@@ -72,11 +72,11 @@ namespace XUnitRemote.Local
 
             using (var channelFactory = CreateTestServiceChannelFactory(id, onTestFinished))
             {
-                Action<ITestService> action = service =>
+                Func<ITestService, Task> action = async service =>
                 {
                     try
                     {
-                        service.RunTest(
+                        await service.RunTest(
                             TestCase.Method.Type.Assembly.AssemblyPath,
                             TestCase.Method.Type.Name,
                             TestCase.Method.Name);
@@ -87,7 +87,7 @@ namespace XUnitRemote.Local
                     }
                 };
 
-                ExecuteWithChannel(channelFactory, action);
+                await ExecuteWithChannel(channelFactory, action);
                 return runSummary;
             }
         }
@@ -126,14 +126,14 @@ namespace XUnitRemote.Local
             return process;
         }
 
-        private static void ExecuteWithChannel<TChannel>(ChannelFactory<TChannel> channelFactory, Action<TChannel> action)
+        private static async Task ExecuteWithChannel<TChannel>(ChannelFactory<TChannel> channelFactory, Func<TChannel, Task> action)
         {
             var service = channelFactory.CreateChannel();
             var channel = (IServiceChannel) service;
             var success = false;
             try
             {
-                action(service);
+                await action(service);
                 channel.Close();
                 success = true;
             }

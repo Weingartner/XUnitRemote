@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -21,7 +22,7 @@ namespace XUnitRemote.Remote.Service
             _NotificationService = OperationContext.Current.GetCallbackChannel<ITestResultNotificationService>();
         }
 
-        public void RunTest(string assemblyPath, string typeName, string methodName)
+        public async Task RunTest(string assemblyPath, string typeName, string methodName)
         {
             var assembly = Assembly.LoadFrom(assemblyPath);
             var assemblyInfo = new ReflectionAssemblyInfo(assembly);
@@ -50,7 +51,7 @@ namespace XUnitRemote.Remote.Service
 
             xunit2.RunTests(discoveryVisitor.TestCases, visitor, executionOptions);
 
-            visitor.Finished.WaitOne();
+            await visitor.Finished;
         }
 
         private static bool FilterTestCase(ITestCaseDiscoveryMessage testCase, string assemblyPath, string typeName, string methodName)
@@ -78,9 +79,12 @@ namespace XUnitRemote.Remote.Service
         }
     }
 
-    public class MessageSink : Xunit.Sdk.TestMessageVisitor<ITestAssemblyFinished>
+    public class MessageSink : Xunit.Sdk.TestMessageVisitor
     {
         private readonly Action<ITestResult> _Callback;
+        private readonly TaskCompletionSource<object> _FinishedTcs = new TaskCompletionSource<object>();
+
+        public Task Finished => _FinishedTcs.Task;
 
         public MessageSink(Action<ITestResult> callback)
         {
@@ -96,6 +100,12 @@ namespace XUnitRemote.Remote.Service
         {
             _Callback(new TestPassed(info.Test.DisplayName, info.ExecutionTime, info.Output));
             return true;
+        }
+
+        protected override bool Visit(ITestAssemblyFinished assemblyFinished)
+        {
+            _FinishedTcs.SetResult(null);
+            return base.Visit(assemblyFinished);
         }
     }
 }

@@ -35,8 +35,9 @@ namespace XUnitRemote.Local
         {
             // Use a default dispatcher if none is provided
             marshaller = marshaller ?? (f => f());
+            Data = data;
 
-            using (var host = new ServiceHost(new TestDispatcher(marshaller, data, isolateInDomain)))
+            using (var host = new ServiceHost(typeof(TestService)))
             {
                 var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
                 var address = Address(id);
@@ -51,26 +52,6 @@ namespace XUnitRemote.Local
         {
             return new Uri(BaseUrl, id);
         }
-    }
-
-
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-    public class TestDispatcher : ITestService
-    {
-        public Dictionary<string, object> Data { get; }
-
-        private readonly Action<Action> _Marshaller;
-        private readonly bool _IsolateInDomain;
-
-        public TestDispatcher(Action<Action> marshaller, Dictionary<string, object> data, bool isolateInDomain = true)
-        {
-            Data = data;
-            _Marshaller = marshaller;
-            _IsolateInDomain = isolateInDomain;
-        }
-
-        void ITestService.RunTest(string assemblyPath, string typeName, string methodName) => 
-            _Marshaller(() => IsolatedTestRunner.Run(assemblyPath, typeName, methodName, Data, _IsolateInDomain));
     }
 
     [Serializable]
