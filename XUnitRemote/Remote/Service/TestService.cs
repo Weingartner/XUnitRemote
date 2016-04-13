@@ -24,18 +24,25 @@ namespace XUnitRemote.Remote.Service
 
         public async Task RunTest(string assemblyPath, string typeName, string methodName)
         {
-            var assembly = Assembly.LoadFrom(assemblyPath);
-            var assemblyInfo = new ReflectionAssemblyInfo(assembly);
             var visitor = new MessageSink(_NotificationService.TestFinished);
             var sourceProvider = new NullSourceInformationProvider();
-            var xunit2 = new Xunit2(AppDomainSupport.Denied, sourceProvider, assemblyPath,null, false, null,visitor, true);
+            var xunit2 = new Xunit2
+                ( appDomainSupport: AppDomainSupport.Denied
+                , sourceInformationProvider: sourceProvider
+                , assemblyFileName: assemblyPath
+                , configFileName: null
+                , shadowCopy: false // Has no effect if appDomainSupport is 'denied'. 
+                , shadowCopyFolder: null
+                , diagnosticMessageSink: visitor
+                , verifyTestAssemblyExists: true
+                );
 
             var testAssemblyConfiguration = new TestAssemblyConfiguration
             {
                 MaxParallelThreads = 1,
                 ParallelizeAssembly = false,
-                ShadowCopy = false,
                 AppDomain = AppDomainSupport.Denied,
+                ShadowCopy = false,
                 ParallelizeTestCollections = false
             };
 
@@ -44,7 +51,7 @@ namespace XUnitRemote.Remote.Service
 
             var discoveryVisitor = new TestDiscoveryVisitor(testCase => FilterTestCase(testCase, assemblyPath, typeName, methodName));
 
-            var discover = new XunitTestFrameworkDiscoverer(assemblyInfo,sourceProvider,visitor);
+            var discover = xunit2;
 
             discover.Find(true, discoveryVisitor, discoveryOptions);
             discoveryVisitor.Finished.WaitOne();
