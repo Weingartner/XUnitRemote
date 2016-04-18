@@ -94,7 +94,7 @@ namespace XUnitRemote.Local
 
         private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id, Action<ITestResult> onTestFinished)
         {
-            var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None);
+            var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None) { SendTimeout = TimeSpan.FromMinutes(60) };
             var address = XUnitService.Address(id);
             var channelFactory = new DuplexChannelFactory<ITestService>(new TestServiceNotificationHandler(onTestFinished), binding, address.ToString());
             return channelFactory;
