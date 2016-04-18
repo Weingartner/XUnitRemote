@@ -53,7 +53,7 @@ namespace XUnitRemote.Local.Debugging
                         {
                             if (Retry(process.HasDebuggerAttached))
                             {
-                                Retry(() => process.Detach());
+                                Retry(() => process.Detach(WaitForBreakOrEnd: false));
                             }
                         });
                     }
