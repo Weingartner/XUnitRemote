@@ -42,19 +42,39 @@ namespace XUnitRemote.Remote
         /// <returns></returns>
         public static IDisposable StartWithDefaultRunner(TestServiceConfiguration config)
         {
+            return StartWithCustomRunner<DefaultTestRunner>(config);
+        }
+
+        /// <summary>
+        /// Start the xUnit WCF service and use a custom runner.
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static IDisposable StartWithCustomRunner<T>(TestServiceConfiguration config)
+            where T : ITestRunner
+        {
             var kernel = GetKernel();
+
             kernel.Bind<Action<AppDomain>>()
                 .ToConstant(new Action<AppDomain>(domain => InitAppDomain(domain, config)))
                 .WhenInjectedInto<DefaultTestRunner>()
                 .InTransientScope();
+
             kernel.Bind<Uri>()
                 .ToConstant(new Uri(BaseNotificationUrl, config.Id))
                 .WhenInjectedInto<DefaultTestRunner>()
                 .InTransientScope();
+
             kernel.Bind<ITestRunner>()
                 .To<DefaultTestRunner>()
+                .WhenInjectedInto<T>()
+                .InTransientScope();
+
+            kernel.Bind<ITestRunner>()
+                .To<T>()
                 .WhenInjectedInto<DefaultTestService>()
                 .InTransientScope();
+
             return Start(config, kernel);
         }
 
@@ -73,22 +93,7 @@ namespace XUnitRemote.Remote
                 Data = ((string[])AppDomain.CurrentDomain.GetData(nameOfDataKeysEntry))
                     .ToDictionary(p => p, p => AppDomain.CurrentDomain.GetData(p));
             });
-        }
-
-        /// <summary>
-        /// Start the xUnit WCF service and use a custom runner.
-        /// </summary>
-        /// <param name="config"></param>
-        /// <param name="createRunner">Callback to get a custom runner instance.</param>
-        /// <returns></returns>
-        public static IDisposable StartWithCustomRunner(TestServiceConfiguration config, Func<ITestService> createRunner)
-        {
-            var kernel = GetKernel();
-            kernel.Bind<ITestService>()
-                .ToMethod(ctx => createRunner())
-                .WhenInjectedInto<DefaultTestService>()
-                .InTransientScope();
-            return Start(config, kernel);
+            domain.DoCallBack(new CrossAppDomainDelegate(config.GlobalTestSetup));
         }
 
         private static IDisposable Start(TestServiceConfiguration config, IKernel kernel)

@@ -16,10 +16,21 @@ namespace XUnitRemote.Remote
         /// </summary>
         public IReadOnlyDictionary<string, object> Data { get; }
 
+        /// <summary>
+        /// Called before executing tests.
+        /// </summary>
+        public Action GlobalTestSetup { get; }
+
         public TestServiceConfiguration(string id, IReadOnlyDictionary<string, object> data)
+            : this(id, data, () => { })
+        {
+        }
+
+        public TestServiceConfiguration(string id, IReadOnlyDictionary<string, object> data, Action globalTestSetup)
         {
             Id = id;
             Data = data;
+            GlobalTestSetup = globalTestSetup;
         }
     }
 }
