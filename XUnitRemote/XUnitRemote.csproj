@@ -113,6 +113,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="Local\Debugging\DebuggerException.cs" />
     <Compile Include="Local\Debugging\IOleMessageFilter.cs" />
     <Compile Include="Local\Debugging\MessageFilter.cs" />
@@ -126,11 +127,14 @@
     <Compile Include="Remote\Result\TestFailed.cs" />
     <Compile Include="Remote\Result\TestPassed.cs" />
     <Compile Include="Remote\Result\TestSkipped.cs" />
-    <Compile Include="Remote\Service\ITestService.cs" />
-    <Compile Include="Remote\Service\TestService.cs" />
+    <Compile Include="Remote\Service\TestResultNotificationService\ITestResultNotificationService.cs" />
+    <Compile Include="Remote\Service\TestResultNotificationService\TestResultNotificationService.cs" />
+    <Compile Include="Remote\Service\TestService\AppDomainTestRunner.cs" />
+    <Compile Include="Remote\Service\TestService\ITestService.cs" />
+    <Compile Include="Remote\Service\TestService\TestService.cs" />
     <Compile Include="Remote\Result\TestExecutionFault.cs" />
     <Compile Include="Local\TestExecutionException.cs" />
-    <Compile Include="Remote\Service\DefaultTestRunner.cs" />
+    <Compile Include="Remote\Service\TestService\DefaultTestRunner.cs" />
     <Compile Include="Remote\XUnitService.cs" />
     <Compile Include="Remote\TestServiceConfiguration.cs" />
   </ItemGroup>

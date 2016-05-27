@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.ServiceModel;
 using Ninject;
 using Ninject.Extensions.Factory;
@@ -9,13 +8,14 @@ using Ninject.Extensions.Wcf;
 using Ninject.Extensions.Wcf.SelfHost;
 using Ninject.Modules;
 using Ninject.Web.Common.SelfHost;
-using XUnitRemote.Remote.Service;
+using XUnitRemote.Remote.Service.TestService;
 
 namespace XUnitRemote.Remote
 {
     public static class XUnitService
     {
-        public static readonly Uri BaseUrl = new Uri("net.pipe://localhost/weingartner/XUnitRemoteTestService/");
+        public static readonly Uri BaseUrl = new Uri("net.pipe://localhost/xunit-remote/test-service/");
+        public static readonly Uri BaseNotificationUrl = new Uri("net.pipe://localhost/xunit-remote/test-result-notification-service/");
 
         public static IReadOnlyDictionary<string, object> Data { get; private set; }
 
@@ -43,11 +43,36 @@ namespace XUnitRemote.Remote
         public static IDisposable StartWithDefaultRunner(TestServiceConfiguration config)
         {
             var kernel = GetKernel();
-            kernel.Bind<ITestService>()
+            kernel.Bind<Action<AppDomain>>()
+                .ToConstant(new Action<AppDomain>(domain => InitAppDomain(domain, config)))
+                .WhenInjectedInto<DefaultTestRunner>()
+                .InTransientScope();
+            kernel.Bind<Uri>()
+                .ToConstant(new Uri(BaseNotificationUrl, config.Id))
+                .WhenInjectedInto<DefaultTestRunner>()
+                .InTransientScope();
+            kernel.Bind<ITestRunner>()
                 .To<DefaultTestRunner>()
-                .WhenInjectedInto<TestService>()
+                .WhenInjectedInto<DefaultTestService>()
                 .InTransientScope();
             return Start(config, kernel);
+        }
+
+        private static void InitAppDomain(AppDomain domain, TestServiceConfiguration config)
+        {
+            const string nameOfDataKeysEntry = "__DataNames__";
+
+            foreach (var kvp in config.Data)
+            {
+                domain.SetData(kvp.Key, kvp.Value);
+            }
+            domain.SetData(nameOfDataKeysEntry, config.Data.Keys.ToArray());
+
+            domain.DoCallBack(() =>
+            {
+                Data = ((string[])AppDomain.CurrentDomain.GetData(nameOfDataKeysEntry))
+                    .ToDictionary(p => p, p => AppDomain.CurrentDomain.GetData(p));
+            });
         }
 
         /// <summary>
@@ -61,26 +86,35 @@ namespace XUnitRemote.Remote
             var kernel = GetKernel();
             kernel.Bind<ITestService>()
                 .ToMethod(ctx => createRunner())
-                .WhenInjectedInto<TestService>()
+                .WhenInjectedInto<DefaultTestService>()
                 .InTransientScope();
             return Start(config, kernel);
         }
 
         private static IDisposable Start(TestServiceConfiguration config, IKernel kernel)
         {
-            Data = config.Data;
+            //kernel.Bind<ITestDataExchangeServiceHost>()
+            //    .ToMethod(ctx =>
+            //    {
+            //        var address = new Uri(BaseUrl, $"{config.Id}/{Globals.TestDataExchangeServiceId}");
+            //        return new TestDataExchangeServiceHost(kernel, address);
+            //    });
 
-            kernel.Bind<ITestResultNotificationService>()
-                .ToMethod(ctx => OperationContext.Current.GetCallbackChannel<ITestResultNotificationService>());
+            // Inject config.Data into ITestDataExchangeServiceHost
 
+            return CreateAndStartTestService(config, kernel);
+        }
+
+        private static NinjectSelfHostBootstrapper CreateAndStartTestService(TestServiceConfiguration config, IKernel kernel)
+        {
             var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None) { SendTimeout = TimeSpan.FromSeconds(10) };
             var address = new Uri(BaseUrl, config.Id);
-            var wcfConfig = NinjectWcfConfiguration.Create<TestService, NinjectServiceSelfHostFactory>(
+            var wcfConfig = NinjectWcfConfiguration.Create<DefaultTestService, NinjectServiceSelfHostFactory>(
                 h => h.AddServiceEndpoint(typeof(ITestService), binding, address));
 
             var host = new NinjectSelfHostBootstrapper(() => kernel, wcfConfig);
             host.Start();
-            return Disposable.Create(() => host.Dispose());
+            return host;
         }
     }
 }
