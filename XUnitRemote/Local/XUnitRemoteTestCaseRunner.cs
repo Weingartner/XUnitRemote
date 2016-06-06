@@ -74,13 +74,13 @@ namespace XUnitRemote.Local
 
             using (var channelFactory = CreateTestServiceChannelFactory(id))
             {
-                Action<ITestService> action = service =>
+                Func<ITestService, Task> action = async service =>
                 {
                     try
                     {
                         using (StartTestExecutionResultHost(id, onTestFinished))
                         {
-                            service.RunTest(
+                            await service.RunTest(
                                 TestCase.Method.Type.Assembly.AssemblyPath,
                                 TestCase.Method.Type.Name,
                                 TestCase.Method.Name);
@@ -92,7 +92,7 @@ namespace XUnitRemote.Local
                     }
                 };
 
-                Common.ExecuteWithChannel(channelFactory, action);
+                await Common.ExecuteWithChannel(channelFactory, action);
                 return runSummary;
             }
         }

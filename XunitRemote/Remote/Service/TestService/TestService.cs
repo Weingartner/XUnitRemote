@@ -14,9 +14,9 @@ namespace XUnitRemote.Remote.Service.TestService
             _Runner = runner;
         }
 
-        public void RunTest(string assemblyPath, string typeName, string methodName)
+        public Task RunTest(string assemblyPath, string typeName, string methodName)
         {
-            _Runner.RunTest(assemblyPath, typeName, methodName);
+            return _Runner.RunTest(assemblyPath, typeName, methodName);
         }
     }
 }

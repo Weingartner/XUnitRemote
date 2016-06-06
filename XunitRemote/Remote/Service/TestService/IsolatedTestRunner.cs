@@ -9,14 +9,14 @@ using XUnitRemote.Remote.Service.TestResultNotificationService;
 namespace XUnitRemote.Remote.Service.TestService
 {
     [Serializable]
-    public class AppDomainTestRunner
+    public class IsolatedTestRunner
     {
         private readonly Uri _ResultNotificationUrl;
         private readonly string _AssemblyPath;
         private readonly string _TypeName;
         private readonly string _MethodName;
 
-        public AppDomainTestRunner(Uri resultNotificationUrl, string assemblyPath, string typeName, string methodName)
+        public IsolatedTestRunner(Uri resultNotificationUrl, string assemblyPath, string typeName, string methodName)
         {
             _ResultNotificationUrl = resultNotificationUrl;
             _AssemblyPath = assemblyPath;
@@ -24,12 +24,7 @@ namespace XUnitRemote.Remote.Service.TestService
             _MethodName = methodName;
         }
 
-        public void RunSync()
-        {
-            Run().Wait();
-        }
-
-        private async Task Run()
+        public async Task Run()
         {
             using (var runner = AssemblyRunner.WithoutAppDomain(_AssemblyPath))
             using (var channelFactory = CreateNotificationServiceChannelFactory())
@@ -52,9 +47,13 @@ namespace XUnitRemote.Remote.Service.TestService
             }
         }
 
-        private static void Notify(ChannelFactory<ITestResultNotificationService> channelFactory, ITestResult result)
+        private static Task Notify(ChannelFactory<ITestResultNotificationService> channelFactory, ITestResult result)
         {
-            Common.ExecuteWithChannel(channelFactory, s => s.TestFinished(result));
+            return Common.ExecuteWithChannel(channelFactory, s =>
+            {
+                s.TestFinished(result);
+                return Task.CompletedTask;
+            });
         }
 
         private ChannelFactory<ITestResultNotificationService> CreateNotificationServiceChannelFactory()

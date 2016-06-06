@@ -11,14 +11,14 @@ namespace XUnitRemote
             return new NetNamedPipeBinding(NetNamedPipeSecurityMode.None) { SendTimeout = TimeSpan.FromMinutes(5) };
         }
 
-        public static void ExecuteWithChannel<TChannel>(ChannelFactory<TChannel> channelFactory, Action<TChannel> action)
+        public static async Task ExecuteWithChannel<TChannel>(ChannelFactory<TChannel> channelFactory, Func<TChannel, Task> action)
         {
             var service = channelFactory.CreateChannel();
             var channel = (IServiceChannel) service;
             var success = false;
             try
             {
-                action(service);
+                await action(service);
                 channel.Close();
                 success = true;
             }

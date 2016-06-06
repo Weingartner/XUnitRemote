@@ -1,5 +1,6 @@
 using System;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using XUnitRemote.Remote.Result;
 
 namespace XUnitRemote.Remote.Service.TestService
@@ -9,11 +10,11 @@ namespace XUnitRemote.Remote.Service.TestService
     {
         [OperationContract]
         [FaultContract(typeof(TestExecutionFault))]
-        void RunTest(string assemblyPath, string typeName, string methodName);
+        Task RunTest(string assemblyPath, string typeName, string methodName);
     }
 
     public interface ITestRunner
     {
-        void RunTest(string assemblyPath, string typeName, string methodName);
+        Task RunTest(string assemblyPath, string typeName, string methodName);
     }
 }

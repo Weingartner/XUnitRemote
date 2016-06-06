@@ -129,7 +129,7 @@
     <Compile Include="Remote\Result\TestSkipped.cs" />
     <Compile Include="Remote\Service\TestResultNotificationService\ITestResultNotificationService.cs" />
     <Compile Include="Remote\Service\TestResultNotificationService\TestResultNotificationService.cs" />
-    <Compile Include="Remote\Service\TestService\AppDomainTestRunner.cs" />
+    <Compile Include="Remote\Service\TestService\IsolatedTestRunner.cs" />
     <Compile Include="Remote\Service\TestService\ITestService.cs" />
     <Compile Include="Remote\Service\TestService\TestService.cs" />
     <Compile Include="Remote\Result\TestExecutionFault.cs" />

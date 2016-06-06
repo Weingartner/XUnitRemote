@@ -55,11 +55,6 @@ namespace XUnitRemote.Remote
         {
             var kernel = GetKernel();
 
-            kernel.Bind<Action<AppDomain>>()
-                .ToConstant(new Action<AppDomain>(domain => InitAppDomain(domain, config)))
-                .WhenInjectedInto<DefaultTestRunner>()
-                .InTransientScope();
-
             kernel.Bind<Uri>()
                 .ToConstant(new Uri(BaseNotificationUrl, config.Id))
                 .WhenInjectedInto<DefaultTestRunner>()
@@ -78,35 +73,8 @@ namespace XUnitRemote.Remote
             return Start(config, kernel);
         }
 
-        private static void InitAppDomain(AppDomain domain, TestServiceConfiguration config)
-        {
-            const string nameOfDataKeysEntry = "__DataNames__";
-
-            foreach (var kvp in config.Data)
-            {
-                domain.SetData(kvp.Key, kvp.Value);
-            }
-            domain.SetData(nameOfDataKeysEntry, config.Data.Keys.ToArray());
-
-            domain.DoCallBack(() =>
-            {
-                Data = ((string[])AppDomain.CurrentDomain.GetData(nameOfDataKeysEntry))
-                    .ToDictionary(p => p, p => AppDomain.CurrentDomain.GetData(p));
-            });
-            domain.DoCallBack(new CrossAppDomainDelegate(config.GlobalTestSetup));
-        }
-
         private static IDisposable Start(TestServiceConfiguration config, IKernel kernel)
         {
-            //kernel.Bind<ITestDataExchangeServiceHost>()
-            //    .ToMethod(ctx =>
-            //    {
-            //        var address = new Uri(BaseUrl, $"{config.Id}/{Globals.TestDataExchangeServiceId}");
-            //        return new TestDataExchangeServiceHost(kernel, address);
-            //    });
-
-            // Inject config.Data into ITestDataExchangeServiceHost
-
             return CreateAndStartTestService(config, kernel);
         }
 
