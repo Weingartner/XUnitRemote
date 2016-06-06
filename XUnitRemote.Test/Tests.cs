@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using XUnitRemote.Local;
 using XUnitRemote.Remote;
+using XUnitRemote.Test.SampleProcess;
 
 namespace XUnitRemote.Test
 {
@@ -56,6 +58,13 @@ namespace XUnitRemote.Test
         {
             _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
             Assert.Equal(ProcessName, Process.GetCurrentProcess().ProcessName);
+        }
+
+        [ScheduledSampleProcessFact]
+        public void SchedulingWorks()
+        {
+            _Output.WriteLine($"Thread: Name = {Thread.CurrentThread.Name}, Id = {Thread.CurrentThread.ManagedThreadId}");
+            Assert.Equal(1, Thread.CurrentThread.ManagedThreadId);
         }
 
         [Fact]

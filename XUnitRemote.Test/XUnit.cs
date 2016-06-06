@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using XUnitRemote.Local;
 using FactAttribute = Xunit.FactAttribute;
+using TestMethodDisplay = Xunit.Sdk.TestMethodDisplay;
 
 namespace XUnitRemote.Test
 {
@@ -21,6 +26,11 @@ namespace XUnitRemote.Test
     [AttributeUsage(AttributeTargets.Method)]
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessFactDiscoverer", "XUnitRemote.Test")]
     public class SampleProcessFactAttribute : FactAttribute { }
+
+
+    [AttributeUsage(AttributeTargets.Method)]
+    [XunitTestCaseDiscoverer("XUnitRemote.Test.ScheduledSampleProcessFactDiscoverer", "XUnitRemote.Test")]
+    public class ScheduledSampleProcessFactAttribute : FactAttribute { }
 
     [AttributeUsage(AttributeTargets.Method)]
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessTheoryDiscoverer", "XUnitRemote.Test")]
@@ -40,6 +50,65 @@ namespace XUnitRemote.Test
         public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
             : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
         {
+        }
+    }
+
+    public class ScheduledSampleProcessFactDiscoverer : XUnitRemoteTestCaseDiscoverer
+    {
+        public ScheduledSampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, new ScheduledFactDiscoverer(diagnosticMessageSink))
+        {
+        }
+    }
+
+    public class ScheduledFactDiscoverer : IXunitTestCaseDiscoverer
+    {
+        private readonly IMessageSink _DiagnosticMessageSink;
+
+        public ScheduledFactDiscoverer(IMessageSink diagnosticMessageSink)
+        {
+            _DiagnosticMessageSink = diagnosticMessageSink;
+        }
+
+        public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod,
+            IAttributeInfo factAttribute)
+        {
+            yield return new ScheduledTestCase(_DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), testMethod);
+        }
+    }
+
+    public class ScheduledTestCase : XunitTestCase 
+    {
+        public ScheduledTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod)
+            : base(diagnosticMessageSink, defaultMethodDisplay, testMethod)
+        {
+        }
+
+        public override Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink, IMessageBus messageBus, object[] constructorArguments,
+            ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
+        {
+            var tcs = new TaskCompletionSource<RunSummary>();
+            SampleProcess.Program.Scheduler.ScheduleAsync(async (scheduler, ct) =>
+            {
+                try
+                {
+                    // Set up the SynchronizationContext so that any awaits
+                    // resume on the STA thread as they would in a GUI app.
+                    //SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext());
+
+                    var runSummary = await base.RunAsync(diagnosticMessageSink, messageBus, constructorArguments, aggregator, cancellationTokenSource);
+                    tcs.SetResult(runSummary);
+                }
+                catch (OperationCanceledException)
+                {
+                    tcs.SetCanceled();
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+            return tcs.Task;
         }
     }
 
