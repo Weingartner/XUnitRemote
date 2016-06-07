@@ -53,38 +53,32 @@ namespace XUnitRemote.Test
         }
     }
 
-    public class ScheduledSampleProcessFactDiscoverer : XUnitRemoteTestCaseDiscoverer
+    public class ScheduledSampleProcessFactDiscoverer : XUnitRemoteFactDiscoverer
     {
         public ScheduledSampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
-            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, new ScheduledFactDiscoverer(diagnosticMessageSink))
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, p => new ScheduledTestCase(p))
         {
         }
     }
 
-    public class ScheduledFactDiscoverer : IXunitTestCaseDiscoverer
+    public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscoverer
     {
-        private readonly IMessageSink _DiagnosticMessageSink;
-
-        public ScheduledFactDiscoverer(IMessageSink diagnosticMessageSink)
+        public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
         {
-            _DiagnosticMessageSink = diagnosticMessageSink;
-        }
-
-        public IEnumerable<IXunitTestCase> Discover(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod,
-            IAttributeInfo factAttribute)
-        {
-            yield return new ScheduledTestCase(_DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), testMethod);
         }
     }
 
-    public class ScheduledTestCase : XunitTestCase 
+    public class ScheduledTestCase : IXunitTestCase
     {
-        public ScheduledTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod)
-            : base(diagnosticMessageSink, defaultMethodDisplay, testMethod)
+        private readonly IXunitTestCase _TestCase;
+
+        public ScheduledTestCase(IXunitTestCase testCase)
         {
+            _TestCase = testCase;
         }
 
-        public override Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink, IMessageBus messageBus, object[] constructorArguments,
+        public Task<RunSummary> RunAsync(IMessageSink diagnosticMessageSink, IMessageBus messageBus, object[] constructorArguments,
             ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
         {
             var tcs = new TaskCompletionSource<RunSummary>();
@@ -92,11 +86,7 @@ namespace XUnitRemote.Test
             {
                 try
                 {
-                    // Set up the SynchronizationContext so that any awaits
-                    // resume on the STA thread as they would in a GUI app.
-                    //SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext());
-
-                    var runSummary = await base.RunAsync(diagnosticMessageSink, messageBus, constructorArguments, aggregator, cancellationTokenSource);
+                    var runSummary = await _TestCase.RunAsync(diagnosticMessageSink, messageBus, constructorArguments, aggregator, cancellationTokenSource);
                     tcs.SetResult(runSummary);
                 }
                 catch (OperationCanceledException)
@@ -110,13 +100,29 @@ namespace XUnitRemote.Test
             });
             return tcs.Task;
         }
-    }
 
-    public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscoverer
-    {
-        public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink)
-            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
+        public IMethodInfo Method => _TestCase.Method;
+
+        public void Deserialize(IXunitSerializationInfo info) => _TestCase.Deserialize(info);
+
+        public void Serialize(IXunitSerializationInfo info) => _TestCase.Serialize(info);
+
+        public string DisplayName => _TestCase.DisplayName;
+
+        public string SkipReason => _TestCase.SkipReason;
+
+        public ISourceInformation SourceInformation
         {
+            get { return _TestCase.SourceInformation; }
+            set { _TestCase.SourceInformation = value; }
         }
+
+        public ITestMethod TestMethod => _TestCase.TestMethod;
+
+        public object[] TestMethodArguments => _TestCase.TestMethodArguments;
+
+        public Dictionary<string, List<string>> Traits => _TestCase.Traits;
+
+        public string UniqueID => _TestCase.UniqueID;
     }
 }
