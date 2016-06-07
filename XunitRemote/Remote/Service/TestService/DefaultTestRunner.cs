@@ -8,21 +8,23 @@ using System.Reflection;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.Threading.Tasks;
+using XUnitRemote.Remote.Service.TestResultNotificationService;
 
 namespace XUnitRemote.Remote.Service.TestService
 {
     public class DefaultTestRunner : ITestRunner
     {
-        private readonly Uri _ResultNotificationUrl;
+        private readonly Func<ITestResultNotificationService> _CreateNotificationService;
 
-        public DefaultTestRunner(Uri resultNotificationUrl)
+        public DefaultTestRunner(Func<ITestResultNotificationService> createNotificationService)
         {
-            _ResultNotificationUrl = resultNotificationUrl;
+            _CreateNotificationService = createNotificationService;
         }
 
         public async Task RunTest(string assemblyPath, string typeName, string methodName)
         {
-            var runner = new IsolatedTestRunner(_ResultNotificationUrl, assemblyPath, typeName, methodName);
+            var testResultNotificationService = _CreateNotificationService();
+            var runner = new IsolatedTestRunner(assemblyPath, typeName, methodName, testResultNotificationService.TestFinished);
             await runner.Run();
         }
     }

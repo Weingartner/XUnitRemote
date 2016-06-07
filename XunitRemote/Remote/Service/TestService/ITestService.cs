@@ -2,10 +2,11 @@ using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using XUnitRemote.Remote.Result;
+using XUnitRemote.Remote.Service.TestResultNotificationService;
 
 namespace XUnitRemote.Remote.Service.TestService
 {
-    [ServiceContract]
+    [ServiceContract(CallbackContract = typeof(ITestResultNotificationService))]
     public interface ITestService
     {
         [OperationContract]

@@ -1,7 +1,15 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,13 +45,13 @@ namespace XUnitRemote.Local
             try
             {
                 using (var process = GetOrStartProcess(_ExecutablePath))
-                using (RemoteDebugger.CascadeDebugging(process.Id))
+                using (CascadeDebugging(process.Id))
                 {
                     var result = await Policy
                         .Handle<DebuggerException>()
                         .Or<EndpointNotFoundException>()
                         .WaitAndRetryAsync(Enumerable.Repeat(TimeSpan.FromMilliseconds(100), 500))
-                        .ExecuteAndCaptureAsync(() => RunTest(_Id));
+                        .ExecuteAndCaptureAsync(RunTest);
                     if (result.Outcome != OutcomeType.Successful)
                     {
                         throw result.FinalException;
@@ -59,7 +67,22 @@ namespace XUnitRemote.Local
             }
         }
 
-        private async Task<RunSummary> RunTest(string id)
+        private static readonly ConcurrentDictionary<int, IObservable<Unit>> CascadeDebuggingObservable =
+            new ConcurrentDictionary<int, IObservable<Unit>>();
+        private static IDisposable CascadeDebugging(int processId)
+        {
+            return CascadeDebuggingObservable
+                .GetOrAdd(processId, pId =>
+                    Observable.Defer(() =>
+                        Observable.Using(() => RemoteDebugger.CascadeDebugging(processId), _ => Observable.Never<Unit>())
+                    )
+                    .Publish()
+                    .RefCount()
+                )
+                .Subscribe();
+        }
+
+        private async Task<RunSummary> RunTest()
         {
             var runSummary = new RunSummary();
             Action<ITestResult> onTestFinished = result =>
@@ -72,19 +95,16 @@ namespace XUnitRemote.Local
                 runSummary.Aggregate(GetRunSummary(result));
             };
 
-            using (var channelFactory = CreateTestServiceChannelFactory(id))
+            using (var channelFactory = CreateTestServiceChannelFactory(_Id, onTestFinished))
             {
                 Func<ITestService, Task> action = async service =>
                 {
                     try
                     {
-                        using (StartTestExecutionResultHost(id, onTestFinished))
-                        {
-                            await service.RunTest(
-                                TestCase.Method.Type.Assembly.AssemblyPath,
-                                TestCase.Method.Type.Name,
-                                TestCase.Method.Name);
-                        }
+                        await service.RunTest(
+                            TestCase.Method.Type.Assembly.AssemblyPath,
+                            TestCase.Method.Type.Name,
+                            TestCase.Method.Name);
                     }
                     catch (FaultException<TestExecutionFault> fault)
                     {
@@ -97,45 +117,41 @@ namespace XUnitRemote.Local
             }
         }
 
-        private static IDisposable StartTestExecutionResultHost(string id, Action<ITestResult> onTestFinished)
+        private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id, Action<ITestResult> onTestFinished)
         {
-            var address = new Uri(XUnitService.BaseNotificationUrl, id);
-            var host = new ServiceHost(new TestResultNotificationService(onTestFinished));
-            host.AddServiceEndpoint(typeof(ITestResultNotificationService), Common.CreateBinding(), address);
-            host.Open();
-            return host;
-        }
-
-        private static ChannelFactory<ITestService> CreateTestServiceChannelFactory(string id)
-        {
+            var binding = new NetNamedPipeBinding(NetNamedPipeSecurityMode.None) { SendTimeout = TimeSpan.FromMinutes(60) };
             var address = new Uri(XUnitService.BaseUrl, id);
-            return new ChannelFactory<ITestService>(Common.CreateBinding(), address.ToString());
+            return new DuplexChannelFactory<ITestService>(new TestServiceNotificationHandler(onTestFinished), binding, address.ToString());
         }
 
+        private static readonly object StartProcessLock = new object();
         private static Process GetOrStartProcess(string processPath)
         {
-            var runningProcess = Process
-                .GetProcessesByName(Path.GetFileNameWithoutExtension(processPath))
-                .FirstOrDefault();
-
-            if (runningProcess != null)
+            lock (StartProcessLock)
             {
-                return runningProcess;
-            }
+                var runningProcess = Process
+                    .GetProcessesByName(Path.GetFileNameWithoutExtension(processPath))
+                    .FirstOrDefault();
 
-            var process = new Process
-            {
-                StartInfo =
+                if (runningProcess != null)
                 {
-                    FileName = processPath,
-                    CreateNoWindow = true
+                    return runningProcess;
                 }
-            };
-            if (!process.Start())
-            {
-                throw new TestExecutionException("Process couldn't be started.");
+
+                var process = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = processPath,
+                        CreateNoWindow = true
+                    }
+                };
+                if (!process.Start())
+                {
+                    throw new TestExecutionException("Process couldn't be started.");
+                }
+                return process;
             }
-            return process;
         }
 
         private static RunSummary GetRunSummary(ITestResult result)
@@ -168,6 +184,21 @@ namespace XUnitRemote.Local
             }
             var resultTypeName = testResult?.GetType().FullName ?? "<unknown>";
             throw new TestExecutionException("Cannot get message for the following implementation of `ITestExecutionResult`: " + resultTypeName);
+        }
+
+        internal class TestServiceNotificationHandler : ITestResultNotificationService
+        {
+            private readonly Action<ITestResult> _OnTestFinished;
+
+            public TestServiceNotificationHandler(Action<ITestResult> onTestFinished)
+            {
+                _OnTestFinished = onTestFinished;
+            }
+
+            public void TestFinished(ITestResult result)
+            {
+                _OnTestFinished(result);
+            }
         }
     }
 }
