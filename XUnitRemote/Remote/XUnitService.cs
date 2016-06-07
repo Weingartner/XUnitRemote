@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.ServiceModel;
 using Ninject;
 using Ninject.Extensions.Factory;
@@ -8,6 +11,7 @@ using Ninject.Extensions.Wcf;
 using Ninject.Extensions.Wcf.SelfHost;
 using Ninject.Modules;
 using Ninject.Web.Common.SelfHost;
+using XUnitRemote.Remote.Service.TestResultNotificationService;
 using XUnitRemote.Remote.Service.TestService;
 
 namespace XUnitRemote.Remote
@@ -21,7 +25,13 @@ namespace XUnitRemote.Remote
 
         private static IKernel GetKernel()
         {
-            var kernel = new StandardKernel();
+            var settings = new NinjectSettings { LoadExtensions = false };
+            var kernel = new StandardKernel(settings);
+            var baseDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            foreach (var pattern in settings.ExtensionSearchPatterns)
+            {
+                kernel.Load(Directory.GetFiles(baseDir, pattern).Select(Assembly.LoadFile));
+            }
             EnsureModuleIsLoaded<FuncModule>(kernel);
             return kernel;
         }
@@ -55,9 +65,9 @@ namespace XUnitRemote.Remote
         {
             var kernel = GetKernel();
 
-            kernel.Bind<Uri>()
-                .ToConstant(new Uri(BaseNotificationUrl, config.Id))
-                .WhenInjectedInto<DefaultTestRunner>()
+            kernel.Bind<ITestResultNotificationService>()
+                .ToMethod(ctx => OperationContext.Current.GetCallbackChannel<ITestResultNotificationService>())
+                //.WhenInjectedInto<DefaultTestRunner>()
                 .InTransientScope();
 
             kernel.Bind<ITestRunner>()
@@ -75,6 +85,7 @@ namespace XUnitRemote.Remote
 
         private static IDisposable Start(TestServiceConfiguration config, IKernel kernel)
         {
+            Data = config.Data;
             return CreateAndStartTestService(config, kernel);
         }
 
@@ -86,8 +97,34 @@ namespace XUnitRemote.Remote
                 h => h.AddServiceEndpoint(typeof(ITestService), binding, address));
 
             var host = new NinjectSelfHostBootstrapper(() => kernel, wcfConfig);
+            if (!kernel.GetAll<INinjectSelfHost>().Any())
+            {
+                throw new TestServiceException("Can't start test service because no instances of `INinjectSelfHost` are registered");
+            }
             host.Start();
             return host;
+        }
+    }
+
+    [Serializable]
+    public class TestServiceException : Exception
+    {
+        public TestServiceException()
+        {
+        }
+
+        public TestServiceException(string message) : base(message)
+        {
+        }
+
+        public TestServiceException(string message, Exception inner) : base(message, inner)
+        {
+        }
+
+        protected TestServiceException(
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
+        {
         }
     }
 }
