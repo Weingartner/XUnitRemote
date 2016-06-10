@@ -10,6 +10,36 @@ using XUnitRemote.Test.SampleProcess;
 
 namespace XUnitRemote.Test
 {
+    public class Tests0
+    {
+        [SampleProcessTheory]
+        [InlineData(1, 2, 3)]
+        [InlineData(5, 6, 7)]
+        [InlineData(8, 9, 10)]
+        public async Task TestData(int a, int b, int c)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Assert.Equal(1, b-a);
+            Assert.Equal(1, c-b);
+            //Assert.True(b >= 6);
+        }
+        
+    }
+    public class Tests1
+    {
+        [SampleProcessTheory]
+        [InlineData(1, 2, 3)]
+        [InlineData(5, 6, 7)]
+        [InlineData(8, 9, 10)]
+        public async Task TestData(int a, int b, int c)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            Assert.Equal(1, b-a);
+            Assert.Equal(1, c-b);
+            //Assert.True(b >= 6);
+        }
+        
+    }
     public class Tests
     {
         private readonly ITestOutputHelper _Output;
@@ -58,13 +88,6 @@ namespace XUnitRemote.Test
         {
             _Output.WriteLine("Process name: " + Process.GetCurrentProcess().ProcessName);
             Assert.Equal(ProcessName, Process.GetCurrentProcess().ProcessName);
-        }
-
-        [ScheduledSampleProcessFact]
-        public void SchedulingWorks()
-        {
-            _Output.WriteLine($"Thread: Name = {Thread.CurrentThread.Name}, Id = {Thread.CurrentThread.ManagedThreadId}");
-            Assert.Equal(1, Thread.CurrentThread.ManagedThreadId);
         }
 
         [Fact]

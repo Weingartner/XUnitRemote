@@ -29,10 +29,6 @@ namespace XUnitRemote.Test
 
 
     [AttributeUsage(AttributeTargets.Method)]
-    [XunitTestCaseDiscoverer("XUnitRemote.Test.ScheduledSampleProcessFactDiscoverer", "XUnitRemote.Test")]
-    public class ScheduledSampleProcessFactAttribute : FactAttribute { }
-
-    [AttributeUsage(AttributeTargets.Method)]
     [XunitTestCaseDiscoverer("XUnitRemote.Test.SampleProcessTheoryDiscoverer", "XUnitRemote.Test")]
     public class SampleProcessTheoryAttribute : TheoryAttribute { }
 
@@ -47,24 +43,22 @@ namespace XUnitRemote.Test
     /// </summary>
     public class SampleProcessFactDiscoverer : XUnitRemoteFactDiscoverer
     {
-        public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
-            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
-        {
-        }
-    }
 
-    public class ScheduledSampleProcessFactDiscoverer : XUnitRemoteFactDiscoverer
-    {
-        public ScheduledSampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
-            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, p => new ScheduledTestCase(p))
+        public SampleProcessFactDiscoverer(IMessageSink diagnosticMessageSink)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, SampleProcessTheoryDiscoverer.CollectionId )
         {
         }
     }
 
     public class SampleProcessTheoryDiscoverer : XUnitRemoteTheoryDiscoverer
     {
+        /// <summary>
+        /// Force SampleProcessTheoryDiscover to be sequential
+        /// </summary>
+        public static readonly Guid CollectionId = Guid.NewGuid();
+
         public SampleProcessTheoryDiscoverer(IMessageSink diagnosticMessageSink)
-            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath)
+            : base(diagnosticMessageSink, SampleProcess.Program.Id, Common.SampleProcessPath, CollectionId  )
         {
         }
     }
