@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Runners;
 using XUnitRemote.Remote.Result;
-using XUnitRemote.Remote.Service.TestResultNotificationService;
 
 namespace XUnitRemote.Remote.Service.TestService
 {

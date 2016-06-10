@@ -19,7 +19,6 @@ using Xunit.Sdk;
 using XUnitRemote.Local.Debugging;
 using XUnitRemote.Remote;
 using XUnitRemote.Remote.Result;
-using XUnitRemote.Remote.Service.TestResultNotificationService;
 using XUnitRemote.Remote.Service.TestService;
 using TestFailed = XUnitRemote.Remote.Result.TestFailed;
 using TestPassed = XUnitRemote.Remote.Result.TestPassed;

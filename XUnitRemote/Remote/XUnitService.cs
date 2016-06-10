@@ -11,7 +11,6 @@ using Ninject.Extensions.Wcf;
 using Ninject.Extensions.Wcf.SelfHost;
 using Ninject.Modules;
 using Ninject.Web.Common.SelfHost;
-using XUnitRemote.Remote.Service.TestResultNotificationService;
 using XUnitRemote.Remote.Service.TestService;
 
 namespace XUnitRemote.Remote

@@ -2,7 +2,6 @@ using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using XUnitRemote.Remote.Result;
-using XUnitRemote.Remote.Service.TestResultNotificationService;
 
 namespace XUnitRemote.Remote.Service.TestService
 {
@@ -12,6 +11,16 @@ namespace XUnitRemote.Remote.Service.TestService
         [OperationContract]
         [FaultContract(typeof(TestExecutionFault))]
         Task RunTest(string assemblyPath, string typeName, string methodName);
+    }
+
+    [ServiceContract]
+    [ServiceKnownType(typeof(TestPassed))]
+    [ServiceKnownType(typeof(TestFailed))]
+    [ServiceKnownType(typeof(TestSkipped))]
+    public interface ITestResultNotificationService
+    {
+        [OperationContract(IsOneWay = true)]
+        void TestFinished(ITestResult result);
     }
 
     public interface ITestRunner

@@ -8,7 +8,6 @@ using System.Reflection;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
 using System.Threading.Tasks;
-using XUnitRemote.Remote.Service.TestResultNotificationService;
 
 namespace XUnitRemote.Remote.Service.TestService
 {
