@@ -1,3 +1,5 @@
+using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
@@ -9,6 +11,10 @@ namespace XUnitRemote.Local
     {
         private readonly string _Id;
         private readonly string _ExePath;
+
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
+        public XUnitRemoteTestCase() { }
 
         public XUnitRemoteTestCase(IMessageSink diagnosticMessageSink, TestMethodDisplay defaultMethodDisplay, ITestMethod testMethod, string id, string exePath)
             : base(diagnosticMessageSink, defaultMethodDisplay, testMethod)
